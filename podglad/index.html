@@ -1,0 +1,695 @@
+<title>Alfa – podgląd launchera</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500&display=swap">
+<style>
+/* Układ: opis po lewej, telefon z działającą makietą po prawej; na wąskim ekranie jedno pod drugim. */
+:root {
+  --ink: #000;
+  --paper: #fff;
+  --dim: rgba(255,255,255,.55);
+  --faint: rgba(255,255,255,.18);
+  --stage: #0d0d0e;
+  --bezel: #1c1c1f;
+  --font: "Roboto", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body {
+  background: var(--stage);
+  color: var(--paper);
+  font-family: var(--font);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap {
+  min-height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 56px;
+  padding-block: 32px;
+}
+.intro { max-width: 380px; min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+.intro h1 { font-weight: 100; font-size: 56px; line-height: 1; margin: 0; letter-spacing: -1px; }
+.intro .lead { font-weight: 300; font-size: 17px; line-height: 1.5; color: var(--dim); margin: 0; text-wrap: balance; }
+.intro ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.intro li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; font-size: 14px; line-height: 1.5; font-weight: 300; color: rgba(255,255,255,.82); }
+.intro li svg { width: 20px; height: 20px; margin-top: 1px; }
+.note { font-size: 12px; color: var(--dim); font-weight: 300; line-height: 1.5; border-top: 1px solid var(--faint); padding-top: 14px; margin: 0; }
+.hint { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); }
+
+.phone {
+  --w: 360px; --h: 760px;
+  width: var(--w); height: var(--h);
+  border-radius: 46px;
+  padding: 10px;
+  background: var(--bezel);
+  box-shadow: 0 0 0 1px #2a2a2e, 0 40px 80px -20px rgba(0,0,0,.8);
+  flex: none;
+  transform-origin: top center;
+}
+.screen { position: relative; width: 100%; height: 100%; border-radius: 37px; overflow: hidden; overflow: clip; background: var(--ink); user-select: none; -webkit-user-select: none; touch-action: none; }
+.status { position: absolute; top: 0; left: 0; right: 0; height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 26px; font-size: 12px; font-weight: 500; z-index: 3; }
+.status .cam { position: absolute; left: 50%; top: 9px; width: 11px; height: 11px; margin-left: -5.5px; border-radius: 50%; background: #111; box-shadow: 0 0 0 1.5px #222; }
+.status .sys { display: flex; gap: 5px; align-items: center; }
+.navpill { position: absolute; bottom: 7px; left: 50%; width: 110px; height: 4px; margin-left: -55px; border-radius: 2px; background: rgba(255,255,255,.7); z-index: 3; }
+
+.content { position: absolute; top: 30px; bottom: 64px; left: 24px; right: 60px; display: flex; flex-direction: column; }
+.clock { margin-top: 28px; }
+.clock .t { font-weight: 100; font-size: 64px; line-height: 1.1; letter-spacing: -1px; font-variant-numeric: tabular-nums; }
+.clock .d { font-weight: 300; font-size: 15px; letter-spacing: .4px; color: var(--dim); }
+.pages { position: relative; flex: 1; margin-top: 36px; min-height: 0; }
+.page { position: absolute; inset: 0; display: flex; flex-direction: column; transition: opacity .22s ease .03s, transform .28s cubic-bezier(.4,0,.2,1); }
+.page.out { transition: opacity .13s ease, transform .22s cubic-bezier(.4,0,.2,1); }
+.head { display: flex; align-items: flex-end; gap: 14px; }
+.head .L { font-weight: 100; font-size: 92px; line-height: 92px; }
+.head .n { font-size: 13px; letter-spacing: 1px; color: var(--dim); padding-bottom: 18px; }
+.rule { height: 1px; background: var(--faint); }
+.grid { flex: 1; overflow-y: auto; scrollbar-width: none; display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 10px; row-gap: 26px; align-content: start; padding: 24px 0 16px; }
+.grid::-webkit-scrollbar { display: none; }
+.tile { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; transition: transform .25s cubic-bezier(.3,1.6,.5,1); background: none; border: 0; color: inherit; font: inherit; padding: 0; }
+.tile:active { transform: scale(.88); }
+.tile:focus-visible { outline: 1px solid var(--dim); outline-offset: 4px; border-radius: 8px; }
+.tile svg { width: 56px; height: 56px; }
+.tile span { font-size: 12px; line-height: 15px; letter-spacing: .2px; color: rgba(255,255,255,.88); text-align: center; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.empty { flex: 1; display: grid; place-items: center; font-size: 14px; color: var(--dim); text-align: center; }
+
+canvas.rail { position: absolute; top: 30px; bottom: 64px; left: 0; right: 0; width: 100%; height: calc(100% - 94px); pointer-events: none; z-index: 2; }
+.strip { position: absolute; top: 30px; bottom: 64px; right: 0; width: 52px; z-index: 4; cursor: ns-resize; }
+
+
+.swipe { position: absolute; left: 0; right: 0; bottom: 20px; height: 44px; z-index: 4; display: grid; place-items: center; cursor: grab; touch-action: none; }
+.swipe svg { width: 22px; height: 12px; opacity: .45; animation: nudge 2.4s ease-in-out infinite; }
+@keyframes nudge { 0%, 70%, 100% { transform: none; } 80% { transform: translateY(-4px); } 90% { transform: none; } }
+.scrim { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 5; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; background: #000; border-top: 1px solid var(--faint); border-radius: 22px 22px 0 0; padding: 10px 22px 34px; display: flex; flex-direction: column; gap: 18px; transform: translateY(110%); touch-action: none; will-change: transform; }
+.grab { width: 36px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.35); margin: 0 auto 4px; cursor: grab; }
+.quick { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.qa { height: 72px; border: 1px solid var(--faint); border-radius: 18px; background: none; color: #fff; font: 400 14px var(--font); display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: transform .25s cubic-bezier(.3,1.6,.5,1), background .2s; }
+.qa:active { transform: scale(.94); background: rgba(255,255,255,.06); }
+.qa svg { width: 28px; height: 28px; }
+.sk-head { display: flex; justify-content: space-between; align-items: baseline; }
+.sk-head span { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--dim); }
+.sk-head em { font-style: normal; font-size: 11px; color: rgba(255,255,255,.35); }
+.slots { display: grid; grid-template-columns: repeat(4, 1fr); row-gap: 18px; column-gap: 6px; }
+.slot { display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: 0; color: #fff; font: inherit; padding: 0; cursor: pointer; transition: transform .25s cubic-bezier(.3,1.6,.5,1); }
+.slot:active { transform: scale(.88); }
+.slot svg { width: 48px; height: 48px; }
+.slot span { font-size: 11px; line-height: 14px; color: rgba(255,255,255,.85); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slot.empty span { color: rgba(255,255,255,.35); }
+.slot .swap { animation: swap .35s cubic-bezier(.3,1.4,.5,1); }
+@keyframes swap { from { transform: scale(.4) rotate(-20deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.picker { position: absolute; inset: 0; z-index: 8; background: #000; display: flex; flex-direction: column; padding: 40px 0 20px; opacity: 0; transform: translateY(24px); pointer-events: none; transition: opacity .2s, transform .28s cubic-bezier(.4,0,.2,1); }
+.picker.on { opacity: 1; transform: none; pointer-events: auto; }
+.pk-head { display: flex; align-items: center; gap: 12px; padding: 0 20px 14px; border-bottom: 1px solid var(--faint); }
+.pk-head button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--faint); background: none; color: #fff; font-size: 18px; cursor: pointer; }
+.pk-head b { display: block; font-weight: 300; font-size: 24px; }
+.pk-head span { font-size: 12px; color: var(--dim); }
+.pk-remove { margin: 12px 20px 0; height: 40px; border: 1px solid var(--faint); border-radius: 12px; background: none; color: rgba(255,255,255,.8); font: 400 13px var(--font); cursor: pointer; }
+.pk-list { flex: 1; overflow-y: auto; scrollbar-width: none; padding: 6px 0; }
+.pk-list::-webkit-scrollbar { display: none; }
+.pk-row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 8px 20px; background: none; border: 0; color: #fff; font: 300 16px var(--font); text-align: left; cursor: pointer; }
+.pk-row:active { background: rgba(255,255,255,.06); }
+.pk-row svg { width: 40px; height: 40px; flex: none; }
+.pk-row.cur::after { content: "obecny"; margin-left: auto; font-size: 11px; letter-spacing: 1px; color: var(--dim); }
+.pk-sec { padding: 14px 20px 4px; font-size: 11px; letter-spacing: 2px; color: var(--dim); }
+
+.content { transition: left .45s cubic-bezier(.4,0,.2,1), right .45s cubic-bezier(.4,0,.2,1); }
+.screen.infolder .content { left: 60px; right: 22px; }
+.strip.left { right: auto; left: 0; }
+.ftile svg.fold { width: 56px; height: 56px; }
+.fpage { position: absolute; inset: 0; display: flex; flex-direction: column; transition: opacity .3s ease, transform .4s cubic-bezier(.4,0,.2,1); }
+.fhead { display: flex; align-items: center; gap: 12px; padding-bottom: 14px; }
+.fhead button { width: 36px; height: 36px; flex: none; border-radius: 50%; border: 1px solid var(--faint); background: none; color: #fff; font-size: 18px; cursor: pointer; }
+.fhead b { display: block; font-weight: 100; font-size: 44px; line-height: 1; }
+.fhead span { font-size: 12px; letter-spacing: 1px; color: var(--dim); }
+.flist { flex: 1; overflow-y: auto; scrollbar-width: none; padding-bottom: 16px; scroll-behavior: smooth; }
+.flist::-webkit-scrollbar { display: none; }
+.fsec { padding: 18px 0 12px; font-size: 11px; letter-spacing: 2px; color: var(--dim); }
+.fgrid { display: grid; grid-template-columns: repeat(3, 1fr); column-gap: 10px; row-gap: 26px; padding-top: 24px; }
+.fgrid .tile { transition: opacity .25s, transform .25s cubic-bezier(.3,1.6,.5,1); }
+.fgrid .tile.dimmed { opacity: .3; }
+.acts { position: absolute; left: 12px; right: 12px; bottom: 28px; z-index: 7; background: #000; border: 1px solid var(--faint); border-radius: 20px; padding: 8px 0; transform: translateY(20px); opacity: 0; pointer-events: none; transition: opacity .18s, transform .25s cubic-bezier(.4,0,.2,1); }
+.acts.on { transform: none; opacity: 1; pointer-events: auto; }
+.acts .who { display: flex; align-items: center; gap: 10px; padding: 8px 18px 12px; border-bottom: 1px solid var(--faint); font-weight: 300; font-size: 16px; }
+.acts .who svg { width: 36px; height: 36px; }
+.acts button.op { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 18px; background: none; border: 0; color: #fff; font: 300 14px var(--font); text-align: left; cursor: pointer; }
+.acts button.op:active { background: rgba(255,255,255,.06); }
+.acts button.op svg { width: 20px; height: 20px; flex: none; }
+.acts .newf { display: flex; gap: 8px; padding: 6px 18px 10px; }
+.acts input { flex: 1; min-width: 0; height: 36px; border-radius: 10px; border: 1px solid var(--faint); background: #000; color: #fff; padding: 0 12px; font: 300 14px var(--font); }
+.acts input:focus { outline: 1px solid var(--dim); }
+.acts .newf button { height: 36px; padding: 0 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,.5); background: none; color: #fff; font: 400 13px var(--font); cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .page, .page.out, .tile, .picker, .slot, .qa { transition: none; } .swipe svg, .slot .swap { animation: none; } }
+</style>
+
+<div class="wrap">
+  <section class="intro">
+    <span class="hint">Podgląd przed instalacją</span>
+    <h1>Alfa</h1>
+    <p class="lead">Tak wygląda ekran główny Twojego telefonu z launcherem Alfa. Przeciągnij palcem lub myszą po literach przy prawej krawędzi ekranu telefonu.</p>
+    <ul>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M12 4v16M8 8l4-4 4 4M8 16l4 4 4-4"/></svg>Litery pod palcem rosną falą jak pod lupą, rozsuwają się i wychylają w lewo. Obok kciuka pojawia się duża litera.</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></svg>Na środku od razu widać aplikacje na podświetloną literę. Wyszarzone litery nie mają aplikacji.</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/></svg>Ikony to same białe kontury z podpisem na czarnym tle.</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/></svg>Foldery: otwórz „Banki” pod literą B. Rolka przejedzie na lewą stronę i pokaże litery z zawartości folderu. Przytrzymaj ikonę, żeby dodać ją do folderu albo utworzyć nowy.</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M6 15l6-6 6 6"/></svg>Przesuń w górę od dołu ekranu: Telefon, Wiadomości i 8 skrótów. Kliknij pusty skrót albo przytrzymaj zajęty, żeby wybrać aplikację. Ikona zmieni się razem ze skrótem.</li>
+      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M6 6h7M9.5 6v12M15 12h4M15 18h4"/></svg>Polskie litery trafiają do zwykłych: „Ćwiczenia” są pod C, „Śledzenie paczek” pod S.</li>
+    </ul>
+    <p class="note">Aplikacje i ikony są tu przykładowe. Na telefonie launcher pokaże Twoje aplikacje, a kontury narysuje sam z ich oryginalnych ikon, więc ich kształty będą trochę inne niż tutaj.</p>
+  </section>
+
+  <div class="phone" id="phone">
+    <div class="screen" id="screen">
+      <div class="status"><span id="sbTime">9:41</span><i class="cam"></i>
+        <span class="sys"><svg width="14" height="10" viewBox="0 0 14 10" fill="#fff"><rect x="0" y="7" width="2.5" height="3" rx=".5"/><rect x="3.8" y="5" width="2.5" height="5" rx=".5"/><rect x="7.6" y="2.5" width="2.5" height="7.5" rx=".5"/><rect x="11.4" y="0" width="2.5" height="10" rx=".5"/></svg><svg width="20" height="10" viewBox="0 0 20 10" fill="none" stroke="#fff"><rect x=".5" y=".5" width="17" height="9" rx="2"/><rect x="2" y="2" width="11" height="6" rx="1" fill="#fff" stroke="none"/><path d="M19 3.5v3"/></svg></span>
+      </div>
+      <div class="content">
+        <div class="clock"><div class="t" id="time">9:41</div><div class="d" id="date"></div></div>
+        <div class="pages" id="pages"></div>
+      </div>
+      <canvas class="rail" id="rail"></canvas>
+      <div class="strip" id="strip" aria-label="Rolka alfabetu"></div>
+      <div class="swipe" id="swipe" aria-label="Przesuń w górę: szybki dostęp"><svg viewBox="0 0 22 12" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 10l9-7 9 7"/></svg></div>
+      <div class="scrim" id="scrim"></div>
+      <div class="acts" id="acts" role="dialog" aria-label="Opcje aplikacji"></div>
+      <div class="sheet" id="sheet">
+        <div class="grab"></div>
+        <div class="quick">
+          <button class="qa" type="button" id="qaPhone"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg>Telefon</button>
+          <button class="qa" type="button" id="qaSms"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H9l-5 4z"/><path d="M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01"/></svg>Wiadomości</button>
+        </div>
+        <div class="sk-head"><span>Skróty</span><em>przytrzymaj, aby zmienić</em></div>
+        <div class="slots" id="slots"></div>
+      </div>
+      <div class="picker" id="picker" role="dialog" aria-label="Wybór aplikacji dla skrótu">
+        <div class="pk-head"><button type="button" id="pkBack" aria-label="Wróć">&#8592;</button><div><b id="pkTitle">Skrót 1</b><span>Wybierz aplikację</span></div></div>
+        <button type="button" class="pk-remove" id="pkRemove">Usuń skrót</button>
+        <div class="pk-list" id="pkList"></div>
+      </div>
+      <div class="navpill"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // Konturowe ikony (24×24), rysowane cienką białą linią.
+  const I = {
+    camera:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7l1.5-2.5h5L16 7"/><circle cx="12" cy="13.5" r="3.5"/>',
+    bell:'<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+    mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6"/>',
+    wallet:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M15 12.5h6M5 6V5a1 1 0 0 1 1-1h11"/>',
+    book:'<path d="M4 20V5a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h13"/><path d="M8 7h7"/>',
+    chat:'<path d="M4 5h16v11H9l-5 4z"/><path d="M8 10.5h8"/>',
+    cloud:'<path d="M7 18a4 4 0 0 1-.5-8A5.5 5.5 0 0 1 17 9a4.5 4.5 0 0 1 .5 9z"/>',
+    folder:'<path d="M3 6a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>',
+    mail:'<rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M3.5 6l8.5 7 8.5-7"/>',
+    video:'<rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10.5l5-3v9l-5-3"/>',
+    heart:'<path d="M12 20s-7.5-4.5-7.5-10A4 4 0 0 1 12 7.5 4 4 0 0 1 19.5 10C19.5 15.5 12 20 12 20z"/>',
+    photo:'<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M3.5 17l5-5 4 4 3-3 5 5"/>',
+    game:'<path d="M7 8h10a4 4 0 0 1 4 4v1a3.5 3.5 0 0 1-6.3 2.1L14 14h-4l-.7 1.1A3.5 3.5 0 0 1 3 13v-1a4 4 0 0 1 4-4z"/><path d="M7 10.5v3M5.5 12h3M16 11h.01M17.5 13h.01"/>',
+    calendar:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+    calc:'<rect x="5" y="3" width="14" height="18" rx="2"/><rect x="8" y="6" width="8" height="4" rx=".5"/><path d="M8.5 14h.01M12 14h.01M15.5 14h.01M8.5 17.5h.01M12 17.5h.01M15.5 17.5h.01"/>',
+    person:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+    flash:'<path d="M13 2L5 14h6l-1 8 8-12h-6z"/>',
+    bag:'<path d="M5 8h14l-1 13H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+    map:'<path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/>',
+    music:'<path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/>',
+    note:'<path d="M5 3h10l4 4v14H5z"/><path d="M15 3v4h4M8 12h8M8 16h6"/>',
+    sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+    radio:'<rect x="3" y="8" width="18" height="12" rx="2"/><path d="M7 8l10-5M6 12h3M6 15.5h3"/><circle cx="15" cy="14" r="3"/>',
+    scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"/>',
+    box:'<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
+    phone:'<path d="M5 4h3l2 5-2.5 1.5a11 11 0 0 0 6 6L15 14l5 2v3a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
+    globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18 14 14 0 0 1 0-18z"/>',
+    gear:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+    search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',
+    clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    gym:'<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>',
+    podcast:'<circle cx="12" cy="11" r="2"/><path d="M8 15a6 6 0 1 1 8 0M12 14v7"/>',
+    nav:'<path d="M12 3l7 18-7-4-7 4z"/>',
+    key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/>',
+    coin:'<circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2 0 0 0-2.5-1.5c-1.5 0-2.5.8-2.5 2s1 1.7 2.5 2 2.5.8 2.5 2-1 2-2.5 2a2.5 2 0 0 1-2.5-1.5M12 6v1.5M12 16.5V18"/>',
+    card:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9.5h18M7 15h4"/>',
+    chart:'<path d="M4 20h16M4 20V4"/><path d="M7 15l4-4 3 3 5-6"/>',
+    cart:'<path d="M3 4h2l2.5 11h10L20 8H6.5"/><circle cx="9" cy="19" r="1.5"/><circle cx="17" cy="19" r="1.5"/>'
+  };
+  const APPS = [
+    ['Alarmy','bell'],['Aparat','camera'],['Asystent','mic'],
+    ['Bank','wallet'],['Biblioteka','book'],['Inwestycje','chart'],['Kantor','coin'],['Płatności','card'],['Portfel','wallet'],
+    ['Chmura','cloud'],['Czat','chat'],['Ćwiczenia','gym'],
+    ['Dokumenty','folder'],['Dyktafon','mic'],
+    ['E-mail','mail'],
+    ['Filmy','video'],['Fitness','heart'],
+    ['Galeria','photo'],['Gry','game'],
+    ['Hasła','key'],
+    ['Kalendarz','calendar'],['Kalkulator','calc'],['Kompas','compass'],['Kontakty','person'],
+    ['Latarka','flash'],['Lista zakupów','cart'],
+    ['Mapy','map'],['Muzyka','music'],
+    ['Nawigacja','nav'],['Notatki','note'],
+    ['Pliki','folder'],['Podcasty','podcast'],['Pogoda','sun'],
+    ['Radio','radio'],
+    ['Skaner','scan'],['Sklep','bag'],['Śledzenie paczek','box'],
+    ['Telefon','phone'],['Tłumacz','globe'],
+    ['Ustawienia','gear'],
+    ['Wiadomości','chat'],['Wyszukiwarka','search'],
+    ['Zdjęcia','photo'],['Zdrowie','heart'],['Zegar','clock']
+  ];
+  const ALPHABET = [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ', '#'];
+  const letterOf = s => {
+    const f = [...s.trim()].find(c => /[\p{L}\p{N}]/u.test(c)) || '#';
+    const b = (f === 'ł' || f === 'Ł') ? 'L' : f.normalize('NFD')[0].toUpperCase();
+    return /[A-Z]/.test(b) ? b : '#';
+  };
+  const coll = new Intl.Collator('pl', { sensitivity: 'base' });
+  const count = n => n === 1 ? '1 aplikacja' : (n % 10 >= 2 && n % 10 <= 4 && !(n % 100 >= 12 && n % 100 <= 14)) ? n + ' aplikacje' : n + ' aplikacji';
+  const svg = k => `<svg viewBox="-8 -8 40 40" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
+
+  // Zegar i data
+  const tf = new Intl.DateTimeFormat('pl-PL', { hour: '2-digit', minute: '2-digit' });
+  const df = new Intl.DateTimeFormat('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' });
+  const tick = () => { const d = new Date(); const t = tf.format(d); time.textContent = t; sbTime.textContent = t; date.textContent = df.format(d); };
+  tick(); setInterval(tick, 1000);
+
+  // Foldery (przykład: „Banki” pod B)
+  const folders = [{ name: 'Banki', apps: ['Bank', 'Inwestycje', 'Kantor', 'Płatności', 'Portfel'] }];
+  const scr0 = document.getElementById('screen');
+  let groups = {};
+  function rebuild() {
+    const inFolder = new Set(folders.flatMap(f => f.apps));
+    const items = APPS.filter(a => !inFolder.has(a[0])).map(a => ({ t: 'app', name: a[0], icon: a[1] }))
+      .concat(folders.filter(f => f.apps.length).map(f => ({ t: 'folder', name: f.name, f })));
+    items.sort((a, b) => coll.compare(a.name, b.name));
+    groups = {};
+    items.forEach(it => (groups[letterOf(it.name)] ??= []).push(it));
+  }
+  rebuild();
+  const folderSvg = f => {
+    const pos = [[11, 11], [29, 11], [11, 29], [29, 29]];
+    const minis = f.apps.slice(0, 4).map((n, i) => `<g transform="translate(${pos[i][0]} ${pos[i][1]}) scale(.6667)" stroke-width="1.5">${I[byName[n][1]]}</g>`).join('');
+    return `<svg class="fold" viewBox="0 0 56 56" fill="none" stroke="#fff" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="45" height="45" rx="13" stroke="rgba(255,255,255,.45)"/>${minis}</svg>`;
+  };
+  const tileHtml = it => it.t === 'folder'
+    ? `<button class="tile ftile" type="button" data-folder="${it.name}">${folderSvg(it.f)}<span>${it.name}</span></button>`
+    : `<button class="tile" type="button" data-app="${it.name}">${svg(it.icon)}<span>${it.name}</span></button>`;
+  const ofName = n => folders.find(f => f.apps.includes(n));
+
+  // Strony liter
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let selected = null, current = null, homeSelected = null, openFolder = null;
+  function select(letter, force) {
+    if (openFolder) { selected = letter; scrollToSection(letter); draw(); return; }
+    if (letter === selected && !force) return;
+    const dir = selected == null ? 1 : (ALPHABET.indexOf(letter) >= ALPHABET.indexOf(selected) ? 1 : -1);
+    selected = letter; homeSelected = letter;
+    const items = groups[letter] || [];
+    const nApps = items.length;
+    const p = document.createElement('div');
+    p.className = 'page';
+    p.innerHTML = `<div class="head"><div class="L">${letter}</div><div class="n">${nApps ? count(nApps) : 'brak aplikacji'}</div></div><div class="rule"></div>` +
+      (nApps ? `<div class="grid">${items.map(tileHtml).join('')}</div>`
+             : `<div class="empty">Żadna aplikacja nie zaczyna się na „${letter}”</div>`);
+    swapPage(p, dir);
+    draw();
+  }
+  function swapPage(p, dir, horizontal) {
+    const h = (horizontal ? pages.clientWidth : pages.clientHeight) || 500;
+    const ax = horizontal ? 'X' : 'Y';
+    p.style.opacity = 0; p.style.transform = `translate${ax}(${dir * h / (horizontal ? 6 : 12)}px)`;
+    pages.appendChild(p);
+    if (current) {
+      const old = current;
+      old.classList.add('out'); old.style.opacity = 0; old.style.transform = `translate${ax}(${-dir * h / (horizontal ? 6 : 12)}px)`;
+      setTimeout(() => old.remove(), reduce ? 0 : 260);
+    }
+    [...pages.children].slice(0, -2).forEach(n => n.remove());
+    current = p;
+    requestAnimationFrame(() => requestAnimationFrame(() => { p.style.opacity = 1; p.style.transform = 'none'; }));
+  }
+
+  // Otwieranie folderu: rolka przejeżdża na lewą stronę
+  let folderLetters = {};
+  function openFolderView(name) {
+    const f = folders.find(x => x.name === name); if (!f) return;
+    openFolder = f;
+    const apps = f.apps.slice().sort(coll.compare);
+    folderLetters = {};
+    apps.forEach(n => (folderLetters[letterOf(n)] ??= []).push(n));
+    const p = document.createElement('div');
+    p.className = 'page fpage';
+    p.innerHTML = `<div class="fhead"><button type="button" class="fback" aria-label="Zamknij folder">&#8592;</button><div><b>${f.name}</b><span>${count(apps.length)}</span></div></div><div class="rule"></div>` +
+      `<div class="flist"><div class="fgrid">${apps.map(n => tileHtml({ t: 'app', name: n, icon: byName[n][1] }).replace('class="tile"', `class="tile" data-l="${letterOf(n)}"`)).join('')}</div></div>`;
+    scr0.classList.add('infolder'); strip.classList.add('left');
+    swapPage(p, 1, true);
+    selected = Object.keys(folderLetters)[0];
+    const list = p.querySelector('.flist');
+    list.addEventListener('scroll', () => {
+      if (pid != null) return;
+      const tiles = [...list.querySelectorAll('.tile')];
+      const first = tiles.find(t => t.offsetTop - list.offsetTop + t.offsetHeight / 2 >= list.scrollTop) || tiles[0];
+      if (first && first.dataset.l !== selected) { selected = first.dataset.l; draw(); }
+    });
+    sideTo(1);
+  }
+  function closeFolderView() {
+    if (!openFolder) return;
+    openFolder = null;
+    scr0.classList.remove('infolder'); strip.classList.remove('left');
+    rebuild();
+    const L = groups[homeSelected] ? homeSelected : Object.keys(groups)[0];
+    const items = groups[L] || [];
+    const p = document.createElement('div');
+    p.className = 'page';
+    p.innerHTML = `<div class="head"><div class="L">${L}</div><div class="n">${items.length ? count(items.length) : 'brak aplikacji'}</div></div><div class="rule"></div>` +
+      (items.length ? `<div class="grid">${items.map(tileHtml).join('')}</div>` : `<div class="empty">Żadna aplikacja nie zaczyna się na „${L}”</div>`);
+    selected = L; homeSelected = L;
+    swapPage(p, -1, true);
+    sideTo(0);
+  }
+  // Litera z rolki: przewiń do pierwszej aplikacji na tę literę i wyróżnij je
+  function scrollToSection(L) {
+    const list = current && current.querySelector('.flist'); if (!list) return;
+    const tiles = [...list.querySelectorAll('.tile')];
+    const hit = tiles.find(t => t.dataset.l === L);
+    if (hit) list.scrollTop = hit.offsetTop - list.offsetTop - 12;
+    tiles.forEach(t => t.classList.toggle('dimmed', t.dataset.l !== L));
+    clearTimeout(scrollToSection.t);
+    scrollToSection.t = setTimeout(() => tiles.forEach(t => t.classList.remove('dimmed')), 900);
+  }
+  const availNow = c => openFolder ? !!folderLetters[c] : !!groups[c];
+
+  // Animacja strony rolki: 0 = prawa krawędź, 1 = lewa
+  let side = 0, sideRaf = 0;
+  function sideTo(t) {
+    cancelAnimationFrame(sideRaf);
+    const from = side, t0 = performance.now(), dur = reduce ? 1 : 620;
+    const loop = now => {
+      const q = Math.min(1, (now - t0) / dur);
+      side = from + (t - from) * q;
+      draw();
+      if (q < 1) sideRaf = requestAnimationFrame(loop);
+    };
+    sideRaf = requestAnimationFrame(loop);
+  }
+  const ease = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+
+  // Rolka – ta sama matematyka co w AlphabetRail.kt
+  const RAIL_W = 52, PAD_V = 72, SIGMA = 1.5, MAX_SHIFT = 30;
+  const ctx = rail.getContext('2d');
+  let W = 0, H = 0, dpr = 1, k = 0, target = 0, vel = 0, focusY = NaN, raf = 0;
+  function resize() {
+    dpr = Math.max(2, window.devicePixelRatio || 1);
+    W = rail.offsetWidth; H = rail.offsetHeight;
+    rail.width = W * dpr; rail.height = H * dpr;
+    draw();
+  }
+  function draw() {
+    if (!W) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    const right = W - RAIL_W / 2, left = RAIL_W / 2, top = PAD_V, step = (H - 2 * top) / ALPHABET.length;
+    const n = ALPHABET.length;
+    // każda litera rusza z lekkim opóźnieniem – rolka „przelewa się” falą
+    const sideOf = i => ease(Math.max(0, Math.min(1, (side - .35 * i / (n - 1)) / .65)));
+    const sel = ALPHABET.indexOf(selected);
+    const fy = isNaN(focusY) ? top + (Math.max(sel, 0) + .5) * step : focusY;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ALPHABET.forEach((c, i) => {
+      const si = sideOf(i), dirX = -1 + 2 * si;
+      const cx = right + (left - right) * si;
+      const baseY = top + (i + .5) * step;
+      const d = (baseY - fy) / step;
+      const wave = Math.exp(-(d * d) / (2 * SIGMA * SIGMA)) * k;
+      const y = baseY + step * .9 * d * wave - Math.sin(Math.PI * si) * 14;
+      const x = cx + dirX * MAX_SHIFT * wave;
+      const zoom = 1 + 1.3 * wave;
+      const has = availNow(c);
+      const base = c === selected ? 1 : has ? .55 : .18;
+      ctx.globalAlpha = Math.min(1, base + (1 - base) * wave * (has ? 1 : .35));
+      ctx.fillStyle = '#fff';
+      ctx.font = `500 ${13 * zoom}px Roboto, system-ui, sans-serif`;
+      ctx.fillText(c, x, y);
+    });
+    ctx.globalAlpha = 1;
+    const s0 = ease(side), dir0 = -1 + 2 * s0, cx0 = right + (left - right) * s0;
+    if (sel >= 0 && k < .99 && (side === 0 || side === 1)) {
+      ctx.beginPath(); ctx.arc(cx0 + dir0 * 15, top + (sel + .5) * step, 2 * (1 - k), 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+    }
+    if (selected && k > .01) {
+      const r = 34, s = .6 + .4 * k;
+      const bxR = W - RAIL_W - MAX_SHIFT - 58, bxL = RAIL_W + MAX_SHIFT + 58;
+      const by = Math.min(Math.max(fy, top + r), H - top - r), bx = bxR + (bxL - bxR) * s0;
+      ctx.save(); ctx.translate(bx, by); ctx.scale(s, s); ctx.globalAlpha = k;
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, 7); ctx.fillStyle = '#000'; ctx.fill();
+      ctx.lineWidth = 1; ctx.strokeStyle = '#fff'; ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = '300 38px Roboto, system-ui, sans-serif'; ctx.fillText(selected, 0, 2);
+      ctx.restore();
+    }
+  }
+  // Sprężyna jak w Compose: szybkie wejście, miękkie wyjście
+  function animate() {
+    cancelAnimationFrame(raf);
+    let last = performance.now();
+    const loop = now => {
+      const dt = Math.min(.032, (now - last) / 1000); last = now;
+      const stiff = target ? 700 : 240, damp = target ? .85 : 1;
+      const f = -stiff * (k - target) - 2 * damp * Math.sqrt(stiff) * vel;
+      vel += f * dt; k += vel * dt;
+      if (reduce) { k = target; vel = 0; }
+      draw();
+      if (Math.abs(k - target) > .001 || Math.abs(vel) > .001) raf = requestAnimationFrame(loop); else { k = target; draw(); }
+    };
+    raf = requestAnimationFrame(loop);
+  }
+  function track(clientY) {
+    const r = rail.getBoundingClientRect();
+    const scale = r.height / H || 1;
+    focusY = (clientY - r.top) / scale;
+    const step = (H - 2 * PAD_V) / ALPHABET.length;
+    const idx = Math.max(0, Math.min(ALPHABET.length - 1, Math.floor((focusY - PAD_V) / step)));
+    const c = ALPHABET[idx];
+    if (c !== selected) {
+      if (openFolder && !folderLetters[c]) { draw(); return; } // w folderze tylko litery z jego zawartości
+      select(c); try { navigator.vibrate && navigator.vibrate(4); } catch (e) {}
+    }
+    draw();
+  }
+  let pid = null;
+  strip.addEventListener('pointerdown', e => { pid = e.pointerId; strip.setPointerCapture(pid); stopDemo(); target = 1; animate(); track(e.clientY); e.preventDefault(); });
+  strip.addEventListener('pointermove', e => { if (e.pointerId === pid) track(e.clientY); });
+  const up = e => { if (e.pointerId !== pid) return; pid = null; target = 0; animate(); };
+  strip.addEventListener('pointerup', up); strip.addEventListener('pointercancel', up);
+
+  // Dotknięcia ikon i folderów, przytrzymanie = opcje
+  let tileT = 0, tileLong = false;
+  pages.addEventListener('pointerdown', e => {
+    const t = e.target.closest('.tile'); if (!t || !t.dataset.app) return;
+    tileLong = false;
+    tileT = setTimeout(() => { tileLong = true; try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} showActions(t.dataset.app); }, 480);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel', 'scroll'].forEach(ev => pages.addEventListener(ev, () => clearTimeout(tileT), true));
+  pages.addEventListener('click', e => {
+    if (e.target.closest('.fback')) { closeFolderView(); return; }
+    const t = e.target.closest('.tile'); if (!t) return;
+    if (tileLong) { tileLong = false; return; }
+    if (t.dataset.folder) openFolderView(t.dataset.folder);
+    else flashMsg('Otwieram: ' + t.dataset.app);
+  });
+  function flashMsg(t) { typeof flash === 'function' ? flash(t) : 0; }
+
+  // Arkusz opcji aplikacji: dodaj do folderu / nowy folder / usuń z folderu
+  const icoPlus = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 9v6M9 12h6"/></svg>';
+  const icoOut = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9 12h6"/></svg>';
+  const icoInfo = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M12 11v5M12 8h.01"/></svg>';
+  let actFor = null;
+  function showActions(name) {
+    actFor = name;
+    const inF = ofName(name);
+    let h = `<div class="who">${svg(byName[name][1])}${name}</div>`;
+    if (inF) h += `<button type="button" class="op" data-op="out">${icoOut}Usuń z folderu „${inF.name}”</button>`;
+    else {
+      folders.forEach((f, i) => { h += `<button type="button" class="op" data-op="add" data-i="${i}">${icoPlus}Dodaj do folderu „${f.name}”</button>`; });
+      h += `<div class="newf"><input id="newFolder" type="text" placeholder="Nowy folder, np. Zakupy" aria-label="Nazwa nowego folderu"><button type="button" data-op="new">Utwórz</button></div>`;
+    }
+    h += `<button type="button" class="op" data-op="info">${icoInfo}Informacje o aplikacji</button>`;
+    acts.innerHTML = h;
+    acts.classList.add('on');
+    scrim.style.opacity = .6; scrim.style.pointerEvents = 'auto';
+  }
+  function hideActions() {
+    acts.classList.remove('on'); actFor = null;
+    if (typeof applyP === 'function') applyP(); else { scrim.style.opacity = 0; scrim.style.pointerEvents = 'none'; }
+  }
+  acts.addEventListener('click', e => {
+    const b = e.target.closest('[data-op]'); if (!b || !actFor) return;
+    const op = b.dataset.op, name = actFor;
+    if (op === 'add') folders[+b.dataset.i].apps.push(name);
+    if (op === 'new') {
+      const v = (document.getElementById('newFolder').value || '').trim();
+      if (!v) { document.getElementById('newFolder').focus(); return; }
+      const ex = folders.find(f => coll.compare(f.name, v) === 0);
+      ex ? ex.apps.push(name) : folders.push({ name: v, apps: [name] });
+    }
+    if (op === 'out') { const f = ofName(name); f.apps = f.apps.filter(x => x !== name); }
+    if (op === 'info') flashMsg('Informacje o aplikacji: ' + name);
+    hideActions();
+    if (op === 'info') return;
+    rebuild();
+    if (openFolder) {
+      const f = openFolder;
+      if (!f.apps.length) closeFolderView(); else { openFolder = null; openFolderView(f.name); side = 1; draw(); }
+    } else select(groups[selected] ? selected : Object.keys(groups)[0], true);
+    const created = op === 'new' || op === 'add';
+    if (created) flashMsg(`Dodano „${name}” do folderu`);
+  });
+  scrim.addEventListener('click', () => { if (actFor) hideActions(); }, true);
+  addEventListener('keydown', e => { if (e.key === 'Escape') { if (actFor) hideActions(); else if (openFolder) closeFolderView(); } });
+
+  // Dopasowanie telefonu do okna
+  function fit() {
+    const ph = document.getElementById('phone');
+    const avail = Math.min(document.documentElement.clientWidth - 32, 380);
+    const s = Math.min(1, avail / 380);
+    ph.style.zoom = s < 1 ? s : '';
+    resize();
+  }
+  addEventListener('resize', fit);
+
+  // Krótka demonstracja po załadowaniu: przesunięcie kciukiem od A do K
+  let demo = 0;
+  function stopDemo() { cancelAnimationFrame(demo); demo = 0; }
+  function runDemo() {
+    if (reduce) { return; }
+    const step = (H - 2 * PAD_V) / ALPHABET.length;
+    const y0 = PAD_V + .5 * step, y1 = PAD_V + 10.5 * step;
+    const t0 = performance.now() + 700, dur = 1400;
+    target = 1;
+    const loop = now => {
+      if (now < t0) { demo = requestAnimationFrame(loop); return; }
+      if (k === 0 && target === 1) animate();
+      const p = Math.min(1, (now - t0) / dur), e = p < .5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;
+      const r = rail.getBoundingClientRect();
+      track(r.top + (y0 + (y1 - y0) * e) * (r.height / H || 1));
+      if (p < 1) demo = requestAnimationFrame(loop);
+      else setTimeout(() => { target = 0; animate(); }, 600);
+    };
+    demo = requestAnimationFrame(loop);
+  }
+
+
+  // Panel szybkiego dostępu: przesunięcie z dołu do góry
+  const scr = document.getElementById('screen');
+  const slotsState = ['Aparat', 'Mapy', 'Muzyka', null, null, null, null, null];
+  const byName = Object.fromEntries(APPS.map(a => [a[0], a]));
+  const plus = '<svg viewBox="0 0 48 48" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1" stroke-linecap="round"><circle cx="24" cy="24" r="17" stroke-dasharray="3 4"/><path d="M24 18v12M18 24h12"/></svg>';
+  let swapIdx = -1;
+  function renderSlots() {
+    slots.innerHTML = slotsState.map((n, i) => {
+      const a = n && byName[n];
+      return `<button type="button" class="slot${a ? '' : ' empty'}" data-i="${i}">${a ? svg(a[1]).replace('<svg', i === swapIdx ? '<svg class="swap"' : '<svg') : plus}<span>${a ? a[0] : 'Dodaj'}</span></button>`;
+    }).join('');
+    swapIdx = -1;
+  }
+  renderSlots();
+  let pick = -1;
+  function openPicker(i) {
+    pick = i;
+    pkTitle.textContent = 'Skrót ' + (i + 1);
+    pkRemove.hidden = !slotsState[i];
+    let html = '', last = '';
+    APPS.slice().sort((a, b) => coll.compare(a[0], b[0])).forEach(([n, k]) => {
+      const L = letterOf(n);
+      if (L !== last) { html += `<div class="pk-sec">${L}</div>`; last = L; }
+      html += `<button type="button" class="pk-row${slotsState[i] === n ? ' cur' : ''}" data-n="${n}">${svg(k)}${n}</button>`;
+    });
+    pkList.innerHTML = html; pkList.scrollTop = 0;
+    picker.classList.add('on');
+  }
+  const closePicker = () => { picker.classList.remove('on'); pick = -1; };
+  pkBack.onclick = closePicker;
+  pkRemove.onclick = () => { slotsState[pick] = null; renderSlots(); closePicker(); };
+  pkList.onclick = e => { const r = e.target.closest('.pk-row'); if (!r) return; slotsState[pick] = r.dataset.n; swapIdx = pick; renderSlots(); closePicker(); };
+  let pressT = 0, longFired = false;
+  slots.addEventListener('pointerdown', e => {
+    const b = e.target.closest('.slot'); if (!b) return;
+    longFired = false;
+    pressT = setTimeout(() => { longFired = true; try { navigator.vibrate && navigator.vibrate(12); } catch (x) {} openPicker(+b.dataset.i); }, 480);
+  });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => slots.addEventListener(t, () => clearTimeout(pressT)));
+  slots.addEventListener('click', e => {
+    const b = e.target.closest('.slot'); if (!b || longFired) return;
+    const i = +b.dataset.i;
+    if (!slotsState[i]) openPicker(i); else flash('Otwieram: ' + slotsState[i]);
+  });
+  qaPhone.onclick = () => flash('Otwieram: Telefon');
+  qaSms.onclick = () => flash('Otwieram: Wiadomości');
+  function flash(t) {
+    const d = document.createElement('div');
+    d.textContent = t;
+    d.style.cssText = 'position:absolute;left:50%;bottom:56px;transform:translateX(-50%);z-index:9;padding:8px 14px;border:1px solid rgba(255,255,255,.25);border-radius:16px;background:#000;font-size:12px;color:#fff;white-space:nowrap;transition:opacity .3s';
+    scr.appendChild(d);
+    setTimeout(() => { d.style.opacity = 0; setTimeout(() => d.remove(), 300); }, 1100);
+  }
+
+  let p = 0, pv = 0, pTarget = 0, pRaf = 0;
+  const sheetH = () => sheet.offsetHeight || 380;
+  function applyP() {
+    sheet.style.transform = `translateY(${(1 - p) * (sheetH() + 2)}px)`;
+    scrim.style.opacity = p * .75;
+    scrim.style.pointerEvents = p > .02 ? 'auto' : 'none';
+    swipe.style.opacity = 1 - p;
+    sheet.style.visibility = p > 0.001 ? 'visible' : 'hidden';
+  }
+  function settleP(open) {
+    pTarget = open ? 1 : 0;
+    cancelAnimationFrame(pRaf);
+    let last = performance.now();
+    const loop = now => {
+      const dt = Math.min(.032, (now - last) / 1000); last = now;
+      const st = 380, f = -st * (p - pTarget) - 2 * .9 * Math.sqrt(st) * pv;
+      pv += f * dt; p += pv * dt;
+      if (reduce) { p = pTarget; pv = 0; }
+      applyP();
+      if (Math.abs(p - pTarget) > .001 || Math.abs(pv) > .001) pRaf = requestAnimationFrame(loop); else { p = pTarget; pv = 0; applyP(); }
+    };
+    pRaf = requestAnimationFrame(loop);
+  }
+  function dragFrom(el) {
+    let id = null, y0 = 0, p0 = 0, lastY = 0, lastT = 0, vy = 0, moved = false;
+    el.addEventListener('pointerdown', e => {
+      id = e.pointerId; y0 = lastY = e.clientY; lastT = performance.now(); p0 = p; vy = 0; moved = false;
+      cancelAnimationFrame(pRaf);
+      if (el === swipe) { moved = false; el.setPointerCapture(id); }
+    });
+    el.addEventListener('pointermove', e => {
+      if (e.pointerId !== id) return;
+      const scale = scr.getBoundingClientRect().height / scr.offsetHeight || 1;
+      const dy = (e.clientY - y0) / scale;
+      if (!moved && Math.abs(dy) < 6) return;
+      if (!moved) { moved = true; if (el !== swipe) el.setPointerCapture(id); clearTimeout(pressT); }
+      const now = performance.now();
+      vy = ((e.clientY - lastY) / scale) / Math.max(1, now - lastT) * 1000; lastY = e.clientY; lastT = now;
+      p = Math.max(0, Math.min(1, p0 - dy / sheetH())); pv = 0; applyP();
+    });
+    const end = e => {
+      if (e.pointerId !== id) return; id = null;
+      if (!moved) { if (el === swipe) settleP(true); return; }
+      longFired = true; setTimeout(() => longFired = false, 0);
+      settleP(vy < -500 ? true : vy > 500 ? false : p > .4);
+    };
+    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
+  }
+  dragFrom(swipe); dragFrom(sheet);
+  scrim.addEventListener('click', () => settleP(false));
+  addEventListener('keydown', e => { if (e.key === 'Escape') { if (pick >= 0) closePicker(); else settleP(false); } });
+  applyP();
+
+  fit();
+  select('K');
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { draw(); runDemo(); });
+})();
+</script>

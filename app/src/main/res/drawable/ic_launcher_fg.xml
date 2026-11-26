@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Litera A z cienkiego konturu -->
+    <path
+        android:pathData="M37,72 L50,36 L63,72 M41.8,59 L58.2,59"
+        android:strokeWidth="3"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Rolka alfabetu: kropki, środkowa powiększona -->
+    <path
+        android:pathData="M73,38 L73,38.01 M73,45 L73,45.01 M73,61 L73,61.01 M73,68 L73,68.01"
+        android:strokeWidth="2.4"
+        android:strokeColor="#80FFFFFF"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M72,53 L72,53.01"
+        android:strokeWidth="5"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeLineCap="round" />
+</vector>
