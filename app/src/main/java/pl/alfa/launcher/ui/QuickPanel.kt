@@ -95,15 +95,11 @@ fun QuickPanel(vm: LauncherViewModel, modifier: Modifier = Modifier) {
     val scope = rememberCoroutineScope()
     val progress = remember { Animatable(0f) } // 0 = schowany, 1 = otwarty
     var sheetHeight by remember { mutableFloatStateOf(1f) }
-    var picking by remember { mutableStateOf<Int?>(null) }
 
     LaunchedEffect(open) {
         progress.animateTo(if (open) 1f else 0f, PanelSpring)
-        if (!open) picking = null
     }
-    BackHandler(enabled = open) {
-        if (picking != null) picking = null else vm.setPanel(false)
-    }
+    BackHandler(enabled = open) { vm.setPanel(false) }
 
     fun settle(velocity: Float) {
         val target = when {
@@ -191,41 +187,36 @@ fun QuickPanel(vm: LauncherViewModel, modifier: Modifier = Modifier) {
                     vm.openMessages(); vm.setPanel(false)
                 }
             }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 BasicText("SKRÓTY", style = TextStyle(color = Ink.Dim, fontSize = 11.sp, letterSpacing = 2.sp))
-                BasicText("przytrzymaj, aby zmienić", style = TextStyle(color = Ink.White.copy(alpha = 0.35f), fontSize = 11.sp))
+                Spacer(Modifier.weight(1f))
+                if (shortcuts.size < LauncherViewModel.MAX_SHORTCUTS) {
+                    AddButton { vm.openPicker(shortcuts.size) }
+                }
+            }
+            if (shortcuts.isEmpty()) {
+                BasicText(
+                    "Dotknij +, aby dodać skrót. Przytrzymaj skrót, aby go zmienić.",
+                    style = TextStyle(color = Ink.White.copy(alpha = 0.35f), fontSize = 12.sp),
+                )
             }
             shortcuts.chunked(4).forEachIndexed { row, items ->
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     items.forEachIndexed { col, entry ->
-                        val slot = row * 4 + col
-                        ShortcutSlot(
+                        val index = row * 4 + col
+                        ShortcutTile(
                             entry = entry,
                             vm = vm,
+                            iconSize = 48.dp,
+                            labelSize = 11.sp,
                             modifier = Modifier.weight(1f),
-                            onAdd = { picking = slot },
-                            onChange = { picking = slot },
+                            onChange = { vm.openPicker(index) },
                             onLaunched = { vm.setPanel(false) },
                         )
                     }
+                    repeat(4 - items.size) { Spacer(Modifier.weight(1f)) }
                 }
             }
-        }
-
-        // Wybór aplikacji dla skrótu.
-        AnimatedVisibility(
-            visible = picking != null,
-            enter = fadeIn(tween(200)) + slideInVertically(tween(280)) { it / 30 },
-            exit = fadeOut(tween(160)) + slideOutVertically(tween(200)) { it / 30 },
-        ) {
-            val slot = picking ?: 0
-            AppPicker(
-                vm = vm,
-                slot = slot,
-                current = shortcuts.getOrNull(slot),
-                onPick = { vm.setShortcut(slot, it); picking = null },
-                onClose = { picking = null },
-            )
         }
     }
 }
@@ -255,64 +246,78 @@ private fun QuickAction(icon: ImageVector, label: String, modifier: Modifier, on
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+/** Mały „+” w rogu – dodaje kolejny skrót. */
 @Composable
-private fun ShortcutSlot(
-    entry: AppEntry?,
+fun AddButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Box(
+        modifier
+            .size(32.dp)
+            .border(1.dp, Ink.White.copy(alpha = 0.45f), RoundedCornerShape(50))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Canvas(Modifier.size(12.dp)) {
+            val w = 1.2.dp.toPx()
+            drawLine(Ink.White, Offset(0f, size.height / 2), Offset(size.width, size.height / 2), w, StrokeCap.Round)
+            drawLine(Ink.White, Offset(size.width / 2, 0f), Offset(size.width / 2, size.height), w, StrokeCap.Round)
+        }
+    }
+}
+
+/** Skrót: ikona zmienia się z animacją, gdy przypiszesz inną aplikację. Przytrzymanie = zmiana. */
+@Composable
+fun ShortcutTile(
+    entry: AppEntry,
     vm: LauncherViewModel,
-    modifier: Modifier,
-    onAdd: () -> Unit,
+    modifier: Modifier = Modifier,
+    iconSize: androidx.compose.ui.unit.Dp = 56.dp,
+    labelSize: androidx.compose.ui.unit.TextUnit = 12.sp,
     onChange: () -> Unit,
-    onLaunched: () -> Unit,
+    onLaunched: () -> Unit = {},
 ) {
-    // Animacja „podmiany” ikony przy zmianie przypisanej aplikacji.
     AnimatedContent(
         targetState = entry,
-        contentKey = { it?.key },
+        contentKey = { it.key },
         transitionSpec = {
             (fadeIn(tween(220)) + scaleIn(spring(0.55f, Spring.StiffnessMediumLow), initialScale = 0.4f)) togetherWith
                 fadeOut(tween(120))
         },
-        label = "slot",
+        label = "shortcut",
         modifier = modifier,
     ) { app ->
-        if (app != null) {
-            AppTile(
-                entry = app,
-                vm = vm,
-                iconSize = 48.dp,
-                labelSize = 11.sp,
-                maxLines = 1,
-                onLaunched = onLaunched,
-                onLongClick = onChange,
-            )
-        } else {
-            val view = LocalView.current
-            Column(
-                Modifier.combinedClickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = onAdd,
-                    onLongClick = { view.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS); onAdd() },
-                ),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Canvas(Modifier.size(48.dp)) {
-                    val stroke = 1.dp.toPx()
-                    drawCircle(
-                        Ink.White.copy(alpha = 0.4f),
-                        radius = size.minDimension * 0.35f,
-                        style = Stroke(stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3.dp.toPx(), 4.dp.toPx()))),
-                    )
-                    val c = center
-                    val a = size.minDimension * 0.125f
-                    drawLine(Ink.White.copy(alpha = 0.4f), Offset(c.x - a, c.y), Offset(c.x + a, c.y), stroke, StrokeCap.Round)
-                    drawLine(Ink.White.copy(alpha = 0.4f), Offset(c.x, c.y - a), Offset(c.x, c.y + a), stroke, StrokeCap.Round)
-                }
-                Spacer(Modifier.height(8.dp))
-                BasicText("Dodaj", style = TextStyle(color = Ink.White.copy(alpha = 0.35f), fontSize = 11.sp))
-            }
-        }
+        AppTile(
+            entry = app,
+            vm = vm,
+            iconSize = iconSize,
+            labelSize = labelSize,
+            maxLines = 1,
+            onLaunched = onLaunched,
+            onLongClick = onChange,
+        )
+    }
+}
+
+/** Pełnoekranowy wybór aplikacji dla skrótu (nowego albo zmienianego). */
+@Composable
+fun ShortcutPicker(vm: LauncherViewModel) {
+    val picking by vm.picking.collectAsStateWithLifecycle()
+    val shortcuts by vm.shortcuts.collectAsStateWithLifecycle()
+    BackHandler(enabled = picking != null) { vm.closePicker() }
+    AnimatedVisibility(
+        visible = picking != null,
+        enter = fadeIn(tween(200)) + slideInVertically(tween(280)) { it / 30 },
+        exit = fadeOut(tween(160)) + slideOutVertically(tween(200)) { it / 30 },
+    ) {
+        var last by remember { mutableStateOf(0) }
+        picking?.let { last = it }
+        val index = last
+        AppPicker(
+            vm = vm,
+            slot = index,
+            current = shortcuts.getOrNull(index),
+            onPick = { vm.setShortcut(index, it); vm.closePicker() },
+            onClose = { vm.closePicker() },
+        )
     }
 }
 
@@ -361,7 +366,7 @@ private fun AppPicker(
             }
             Spacer(Modifier.width(12.dp))
             Column {
-                BasicText("Skrót ${slot + 1}", style = TextStyle(color = Ink.White, fontSize = 24.sp, fontWeight = FontWeight.Light))
+                BasicText(if (current == null) "Nowy skrót" else "Skrót ${slot + 1}", style = TextStyle(color = Ink.White, fontSize = 24.sp, fontWeight = FontWeight.Light))
                 BasicText("Wybierz aplikację", style = TextStyle(color = Ink.Dim, fontSize = 12.sp))
             }
         }

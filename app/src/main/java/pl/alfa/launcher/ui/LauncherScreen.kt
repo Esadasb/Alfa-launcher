@@ -31,6 +31,14 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
@@ -66,7 +74,23 @@ fun LauncherScreen(vm: LauncherViewModel = viewModel()) {
     val groups by vm.groups.collectAsStateWithLifecycle()
     val selected by vm.selected.collectAsStateWithLifecycle()
     val folder by vm.openFolder.collectAsStateWithLifecycle()
+    val panelOpen by vm.panelOpen.collectAsStateWithLifecycle()
+    val actionTarget by vm.actionTarget.collectAsStateWithLifecycle()
+    val picking by vm.picking.collectAsStateWithLifecycle()
+    val shortcuts by vm.shortcuts.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+
+    // Po 5 s bez dotyku ikony litery gasną, a w ich miejscu pojawiają się skróty.
+    var touchTick by remember { mutableIntStateOf(0) }
+    var idle by remember { mutableStateOf(false) }
+    val busy = folder != null || panelOpen || actionTarget != null || picking != null
+    LaunchedEffect(touchTick, selected, busy) {
+        idle = false
+        if (!busy) {
+            delay(IDLE_MILLIS)
+            idle = true
+        }
+    }
 
     // Rolka przejeżdża na lewą stronę, gdy folder jest otwarty.
     val side by animateFloatAsState(
@@ -104,7 +128,15 @@ fun LauncherScreen(vm: LauncherViewModel = viewModel()) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(Ink.Black),
+            .background(Ink.Black)
+            .pointerInput(Unit) {
+                // Podgląda każdy dotyk (bez przechwytywania), żeby liczyć bezczynność od nowa.
+                // Gdy widać skróty, wraca do liter tylko dotyk rolki – skróty da się normalnie klikać.
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    if (!idle || down.position.x > size.width - RailWidth.toPx()) touchTick++
+                }
+            },
     ) {
         Column(
             Modifier
@@ -122,10 +154,15 @@ fun LauncherScreen(vm: LauncherViewModel = viewModel()) {
 
             val folderNow = folder
             AnimatedContent(
-                targetState = folderNow?.folder?.id ?: selected?.toString(),
+                targetState = folderNow?.folder?.id ?: if (idle) SHORTCUTS_KEY else selected?.toString(),
                 transitionSpec = {
                     val folderChange = initialState?.length != 1 || targetState?.length != 1
-                    val transform = if (folderChange) {
+                    val shortcutsChange = initialState == SHORTCUTS_KEY || targetState == SHORTCUTS_KEY
+                    val transform = if (shortcutsChange) {
+                        // Ikony powoli gasną, skróty łagodnie się wyłaniają.
+                        (fadeIn(tween(600, delayMillis = 250)) + scaleIn(tween(600, delayMillis = 250), initialScale = 0.96f)) togetherWith
+                            (fadeOut(tween(450)) + scaleOut(tween(450), targetScale = 0.98f))
+                    } else if (folderChange) {
                         // Wejście do folderu / wyjście: przesunięcie w poziomie.
                         val dir = if (targetState?.length != 1) 1 else -1
                         (fadeIn(tween(260, delayMillis = 60)) +
@@ -148,6 +185,7 @@ fun LauncherScreen(vm: LauncherViewModel = viewModel()) {
             ) { key ->
                 when {
                     key == null -> Unit
+                    key == SHORTCUTS_KEY -> ShortcutsPage(shortcuts, vm)
                     key.length == 1 -> LetterPage(key.first(), groups[key.first()].orEmpty(), vm)
                     folderNow != null && folderNow.folder.id == key ->
                         FolderPage(folderNow, vm, folderGrid, highlight)
@@ -179,6 +217,53 @@ fun LauncherScreen(vm: LauncherViewModel = viewModel()) {
 
         QuickPanel(vm)
         AppActionsSheet(vm)
+        ShortcutPicker(vm)
+    }
+}
+
+private const val IDLE_MILLIS = 5_000L
+private const val SHORTCUTS_KEY = "@skroty"
+
+/** Ekran skrótów: pojawia się po 5 s bezczynności. Mały „+” w rogu dodaje kolejny skrót. */
+@Composable
+private fun ShortcutsPage(shortcuts: List<pl.alfa.launcher.AppEntry>, vm: LauncherViewModel) {
+    Column(Modifier.fillMaxSize()) {
+        Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.fillMaxWidth()) {
+            BasicText(
+                "Skróty",
+                style = TextStyle(color = Ink.White, fontSize = 56.sp, fontWeight = FontWeight.Thin, lineHeight = 92.sp),
+            )
+            Spacer(Modifier.weight(1f))
+            if (shortcuts.size < LauncherViewModel.MAX_SHORTCUTS) {
+                AddButton(Modifier.padding(bottom = 22.dp)) { vm.openPicker(shortcuts.size) }
+            }
+        }
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(Ink.Faint),
+        )
+        if (shortcuts.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                BasicText(
+                    "Dotknij + w rogu, aby dodać pierwszy skrót",
+                    style = TextStyle(color = Ink.Dim, fontSize = 14.sp, textAlign = TextAlign.Center),
+                )
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(3),
+                contentPadding = PaddingValues(top = 24.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(26.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                itemsIndexed(shortcuts, key = { _, e -> e.key }) { index, entry ->
+                    ShortcutTile(entry, vm, onChange = { vm.openPicker(index) })
+                }
+            }
+        }
     }
 }
 

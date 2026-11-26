@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.update
+import org.json.JSONArray
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -59,13 +59,17 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     private val _selected = MutableStateFlow<Char?>(null)
     val selected: StateFlow<Char?> = _selected.asStateFlow()
 
-    // Programowalne skróty – zapisywane w pamięci telefonu, przetrwają restart.
+    // Programowalne skróty: lista dowolnej długości (do 12), zapisywana w pamięci telefonu.
     private val prefs = app.getSharedPreferences("alfa", Context.MODE_PRIVATE)
-    private val slotKeys = MutableStateFlow(List(SHORTCUT_SLOTS) { prefs.getString("slot_$it", null) })
-    val shortcuts: StateFlow<List<AppEntry?>> = combine(slotKeys, apps) { keys, list ->
+    private val shortcutKeys = MutableStateFlow(loadShortcutKeys())
+    val shortcuts: StateFlow<List<AppEntry>> = combine(shortcutKeys, apps) { keys, list ->
         val byKey = list.associateBy { it.key }
-        keys.map { key -> key?.let(byKey::get) }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, List(SHORTCUT_SLOTS) { null })
+        keys.mapNotNull(byKey::get)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Który skrót wybieramy: indeks istniejącego albo rozmiar listy = nowy skrót. */
+    private val _picking = MutableStateFlow<Int?>(null)
+    val picking: StateFlow<Int?> = _picking.asStateFlow()
 
     private val _panelOpen = MutableStateFlow(false)
     val panelOpen: StateFlow<Boolean> = _panelOpen.asStateFlow()
@@ -99,13 +103,37 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
 
     fun setPanel(open: Boolean) {
         _panelOpen.value = open
+        if (!open) _picking.value = null
     }
 
-    fun setShortcut(slot: Int, entry: AppEntry?) {
-        prefs.edit().apply {
-            if (entry == null) remove("slot_$slot") else putString("slot_$slot", entry.key)
-        }.apply()
-        slotKeys.update { keys -> keys.toMutableList().also { it[slot] = entry?.key } }
+    fun openPicker(index: Int) {
+        _picking.value = index
+    }
+
+    fun closePicker() {
+        _picking.value = null
+    }
+
+    /** Ustawia skrót o danym indeksie (indeks = liczba skrótów dodaje nowy); null usuwa skrót. */
+    fun setShortcut(index: Int, entry: AppEntry?) {
+        val visible = shortcuts.value.map { it.key }
+        val updated = visible.toMutableList()
+        when {
+            entry == null -> if (index in updated.indices) updated.removeAt(index)
+            index in updated.indices -> updated[index] = entry.key
+            entry.key !in updated && updated.size < MAX_SHORTCUTS -> updated.add(entry.key)
+        }
+        val keys = updated.distinct()
+        shortcutKeys.value = keys
+        prefs.edit().putString("shortcuts", JSONArray(keys).toString()).apply()
+    }
+
+    private fun loadShortcutKeys(): List<String> {
+        prefs.getString("shortcuts", null)?.let { json ->
+            return runCatching { JSONArray(json).let { a -> List(a.length()) { a.getString(it) } } }.getOrDefault(emptyList())
+        }
+        // Przeniesienie ze starszej wersji (8 stałych miejsc).
+        return (0 until 8).mapNotNull { prefs.getString("slot_$it", null) }.distinct()
     }
 
     fun openFolder(id: String) {
@@ -178,7 +206,7 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     companion object {
-        const val SHORTCUT_SLOTS = 8
+        const val MAX_SHORTCUTS = 12
         private const val AUTO_FOLDERS_DONE = "auto_folders_v1"
     }
 }
