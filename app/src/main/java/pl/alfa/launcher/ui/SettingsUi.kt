@@ -151,7 +151,7 @@ fun SettingsScreen(vm: LauncherViewModel) {
             SectionLabel("Tło")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Choice("Kolor", s.mode == BackgroundMode.COLOR, Modifier.weight(1f)) {
-                    vm.updateSettings { it.copy(mode = BackgroundMode.COLOR) }
+                    vm.updateSettings { it.copy(mode = BackgroundMode.COLOR, shadows = false) }
                 }
                 Choice("Tapeta", s.mode == BackgroundMode.WALLPAPER, Modifier.weight(1f)) {
                     // Na tapecie cienie są od razu włączone – ikony lepiej się odcinają.
