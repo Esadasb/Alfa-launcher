@@ -198,6 +198,18 @@ fun SettingsScreen(vm: LauncherViewModel) {
                 Choice("Wyłączone", !s.shadows, Modifier.weight(1f)) { vm.updateSettings { it.copy(shadows = false) } }
             }
 
+            SectionLabel("Ekran blokady")
+            val lockOn by vm.lockOn.collectAsStateWithLifecycle()
+            val lockStatus by vm.lockStatus.collectAsStateWithLifecycle()
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Choice("Styl Alfa", lockOn, Modifier.weight(1f)) { vm.setLockScreen(true) }
+                Choice("Systemowy", !lockOn, Modifier.weight(1f)) { if (lockOn) vm.setLockScreen(false) }
+            }
+            Note(
+                lockStatus ?: "Alfa ustawia tapetę ekranu blokady w swoich kolorach i stylu napisów, z rolką alfabetu. " +
+                    "Zegar i powiadomienia rysuje dalej system. Tapeta odświeża się sama po zmianie wyglądu."
+            )
+
             Spacer(Modifier.height(6.dp))
             Box(Modifier.fillMaxWidth().height(1.dp).background(Ink.Faint))
             ActionLine("Ekran główny telefonu", "Wybierz, który launcher ma być włączony") { vm.openHomeSettings() }

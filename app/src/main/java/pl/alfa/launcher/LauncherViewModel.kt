@@ -78,6 +78,40 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         val updated = change(_settings.value)
         _settings.value = updated
         updated.save(prefsFolders)
+        if (_lockOn.value) scheduleLockRefresh()
+    }
+
+    // Tapeta ekranu blokady w stylu Alfa – odświeżana po każdej zmianie wyglądu.
+    private val _lockOn = MutableStateFlow(LockScreen.isOn(app))
+    val lockOn: StateFlow<Boolean> = _lockOn.asStateFlow()
+    private val _lockStatus = MutableStateFlow<String?>(null)
+    val lockStatus: StateFlow<String?> = _lockStatus.asStateFlow()
+    private var lockJob: Job? = null
+
+    fun setLockScreen(on: Boolean) {
+        lockJob?.cancel()
+        lockJob = viewModelScope.launch {
+            _lockStatus.value = if (on) "Ustawiam tapetę ekranu blokady…" else "Przywracam ekran blokady…"
+            val ok = withContext(Dispatchers.IO) {
+                runCatching {
+                    if (on) LockScreen.apply(getApplication<Application>(), _settings.value) else LockScreen.clear(getApplication<Application>())
+                }.isSuccess
+            }
+            if (ok) _lockOn.value = on
+            _lockStatus.value = when {
+                !ok -> "Telefon nie pozwolił zmienić tapety ekranu blokady."
+                on -> "Gotowe. Zablokuj telefon, żeby zobaczyć."
+                else -> "Ekran blokady ma znowu tapetę ekranu głównego."
+            }
+        }
+    }
+
+    private fun scheduleLockRefresh() {
+        lockJob?.cancel()
+        lockJob = viewModelScope.launch {
+            kotlinx.coroutines.delay(800)
+            withContext(Dispatchers.IO) { runCatching { LockScreen.apply(getApplication<Application>(), _settings.value) } }
+        }
     }
 
     private val _settingsOpen = MutableStateFlow(false)
