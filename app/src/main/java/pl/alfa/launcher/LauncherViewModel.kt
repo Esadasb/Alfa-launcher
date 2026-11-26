@@ -71,6 +71,18 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     private val _picking = MutableStateFlow<Int?>(null)
     val picking: StateFlow<Int?> = _picking.asStateFlow()
 
+    private val _homeTick = MutableStateFlow(0)
+
+    /** Rośnie przy każdym naciśnięciu Home – ekran wraca wtedy do skrótów. */
+    val homeTick: StateFlow<Int> = _homeTick.asStateFlow()
+
+    fun onHomePressed() {
+        _homeTick.value++
+        setPanel(false)
+        hideActions()
+        closeFolder()
+    }
+
     private val _panelOpen = MutableStateFlow(false)
     val panelOpen: StateFlow<Boolean> = _panelOpen.asStateFlow()
 

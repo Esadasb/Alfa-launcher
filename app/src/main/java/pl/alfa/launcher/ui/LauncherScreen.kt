@@ -58,6 +58,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.lerp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
@@ -80,13 +82,16 @@ fun LauncherScreen(vm: LauncherViewModel = viewModel()) {
     val shortcuts by vm.shortcuts.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
-    // Po 5 s bez dotyku ikony litery gasną, a w ich miejscu pojawiają się skróty.
+    // Domyślnie widać skróty: zaraz po odblokowaniu i po naciśnięciu Home.
+    // Przesunięcie po rolce pokazuje ikony liter, a po 5 s bez dotyku wracają skróty.
+    var idle by remember { mutableStateOf(true) }
     var touchTick by remember { mutableIntStateOf(0) }
-    var idle by remember { mutableStateOf(false) }
+    val homeTick by vm.homeTick.collectAsStateWithLifecycle()
     val busy = folder != null || panelOpen || actionTarget != null || picking != null
-    LaunchedEffect(touchTick, selected, busy) {
-        idle = false
-        if (!busy) {
+    LifecycleEventEffect(Lifecycle.Event.ON_START) { idle = true }
+    LaunchedEffect(homeTick) { if (homeTick > 0) idle = true }
+    LaunchedEffect(touchTick, selected, busy, idle) {
+        if (!idle && !busy) {
             delay(IDLE_MILLIS)
             idle = true
         }
@@ -130,11 +135,16 @@ fun LauncherScreen(vm: LauncherViewModel = viewModel()) {
             .fillMaxSize()
             .background(Ink.Black)
             .pointerInput(Unit) {
-                // Podgląda każdy dotyk (bez przechwytywania), żeby liczyć bezczynność od nowa.
-                // Gdy widać skróty, wraca do liter tylko dotyk rolki – skróty da się normalnie klikać.
+                // Podgląda każdy dotyk (bez przechwytywania). Dotyk rolki pokazuje ikony liter,
+                // każdy inny dotyk przedłuża ich widoczność. Skróty da się normalnie klikać.
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                    if (!idle || down.position.x > size.width - RailWidth.toPx()) touchTick++
+                    if (down.position.x > size.width - RailWidth.toPx()) {
+                        idle = false
+                        touchTick++
+                    } else if (!idle) {
+                        touchTick++
+                    }
                 }
             },
     ) {
@@ -224,7 +234,7 @@ fun LauncherScreen(vm: LauncherViewModel = viewModel()) {
 private const val IDLE_MILLIS = 5_000L
 private const val SHORTCUTS_KEY = "@skroty"
 
-/** Ekran skrótów: pojawia się po 5 s bezczynności. Mały „+” w rogu dodaje kolejny skrót. */
+/** Ekran skrótów: domyślny widok i powrót po 5 s bezczynności. Mały „+” w rogu dodaje kolejny skrót. */
 @Composable
 private fun ShortcutsPage(shortcuts: List<pl.alfa.launcher.AppEntry>, vm: LauncherViewModel) {
     Column(Modifier.fillMaxSize()) {
@@ -260,7 +270,7 @@ private fun ShortcutsPage(shortcuts: List<pl.alfa.launcher.AppEntry>, vm: Launch
                 modifier = Modifier.fillMaxSize(),
             ) {
                 itemsIndexed(shortcuts, key = { _, e -> e.key }) { index, entry ->
-                    ShortcutTile(entry, vm, onChange = { vm.openPicker(index) })
+                    ShortcutTile(entry, vm, labelSize = 14.sp, onChange = { vm.openPicker(index) })
                 }
             }
         }

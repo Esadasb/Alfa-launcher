@@ -4,7 +4,7 @@ Czarno-biały ekran główny dla Androida 8.0+ (Kotlin + Jetpack Compose).
 
 **Jak działa**
 - Po prawej stronie jest pionowa rolka A–Z (i `#` dla nazw od cyfr). Przesuwasz po niej kciukiem, a litery pod palcem powiększają się falą jak pod lupą, rozsuwają i wychylają w lewo. Obok kciuka pojawia się okrągła „bańka” z dużą literą, a każda zmiana litery daje delikatne tyknięcie wibracji.
-- Po 5 sekundach bez dotyku ikony litery gasną, a w ich miejscu pojawiają się Twoje skróty (z małym „+” w rogu do dodawania kolejnych). Dotknięcie rolki przywraca litery.
+- Zaraz po odblokowaniu telefonu i po naciśnięciu Home widać Twoje skróty (z małym „+” w rogu do dodawania kolejnych). Przesunięcie po rolce pokazuje ikony aplikacji na wybraną literę, a po 5 sekundach bez dotyku znów wracają skróty. Podpisy pod ikonami mają rozmiar 14.
 - Na środku ekranu od razu widać aplikacje na podświetloną literę: duża, cienka litera, liczba aplikacji i siatka ikon z podpisami. Zmiana litery to płynne przejście w górę lub w dół.
 - Ikony to same białe kontury. Launcher sam je rysuje z ikon aplikacji: bierze wersję monochromatyczną (Android 13+) albo pierwszy plan ikony i wyciąga z niej krawędzie. Kontury są liczone w wysokiej rozdzielczości (216 px) i zapisywane w pamięci podręcznej, więc są ostre i nie spowalniają przewijania.
 - Polskie litery trafiają do liter bazowych (Łódź → L, Żabka → Z), a sortowanie jest po polsku.

@@ -24,11 +24,7 @@ class MainActivity : ComponentActivity() {
             override fun handleOnBackPressed() = Unit
         })
         // Ponowne naciśnięcie „Home” chowa panel szybkiego dostępu.
-        addOnNewIntentListener {
-            vm.setPanel(false)
-            vm.hideActions()
-            vm.closeFolder()
-        }
+        addOnNewIntentListener { vm.onHomePressed() }
         setContent { LauncherScreen(vm) }
     }
 }

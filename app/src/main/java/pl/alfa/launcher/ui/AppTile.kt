@@ -76,7 +76,7 @@ fun AppTile(
     vm: LauncherViewModel,
     modifier: Modifier = Modifier,
     iconSize: Dp = 56.dp,
-    labelSize: TextUnit = 12.sp,
+    labelSize: TextUnit = 14.sp,
     maxLines: Int = 2,
     onLaunched: () -> Unit = {},
     onLongClick: (() -> Unit)? = null,
