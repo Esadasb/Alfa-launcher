@@ -96,6 +96,21 @@ class AppRepository(context: Context) {
     /** Domyślna aplikacja do SMS-ów. */
     fun openMessages() = start(Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MESSAGING))
 
+    /** Systemowy wybór aplikacji ekranu głównego – tu wraca się do launchera telefonu. */
+    fun openHomeSettings() {
+        val opened = runCatching {
+            appContext.startActivity(Intent(android.provider.Settings.ACTION_HOME_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }.isSuccess
+        if (!opened) start(Intent(android.provider.Settings.ACTION_SETTINGS))
+    }
+
+    /** Czy Alfa jest teraz domyślnym ekranem głównym. */
+    fun isDefaultHome(): Boolean {
+        val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        val info = appContext.packageManager.resolveActivity(home, android.content.pm.PackageManager.MATCH_DEFAULT_ONLY)
+        return info?.activityInfo?.packageName == appContext.packageName
+    }
+
     private fun start(intent: Intent) {
         runCatching { appContext.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
     }

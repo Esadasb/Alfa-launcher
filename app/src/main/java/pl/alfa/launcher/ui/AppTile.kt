@@ -27,6 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.boundsInRoot
@@ -53,12 +58,27 @@ fun OutlineIcon(entry: AppEntry, vm: LauncherViewModel, size: Dp, modifier: Modi
     val iconAlpha by animateFloatAsState(if (icon != null) 1f else 0f, tween(260), label = "fade")
     Box(modifier.size(size), contentAlignment = Alignment.Center) {
         icon?.let {
+            if (Ink.Shadows) {
+                // Miękki cień pod konturem – ikona odcina się od tapety.
+                Image(
+                    bitmap = it,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(size)
+                        .offset(y = 1.5.dp)
+                        .blur(3.dp, BlurredEdgeTreatment.Unbounded)
+                        .graphicsLayer { alpha = iconAlpha * 0.9f },
+                    colorFilter = ColorFilter.tint(Color.Black),
+                    filterQuality = FilterQuality.High,
+                )
+            }
             Image(
                 bitmap = it,
                 contentDescription = entry.label,
                 modifier = Modifier
                     .size(size)
                     .graphicsLayer { alpha = iconAlpha },
+                colorFilter = ColorFilter.tint(Ink.White),
                 filterQuality = FilterQuality.High,
             )
         }
@@ -122,6 +142,7 @@ fun AppTile(
         BasicText(
             text = entry.label,
             style = TextStyle(
+                shadow = Ink.TextShadow,
                 color = Ink.White.copy(alpha = 0.88f),
                 fontSize = labelSize,
                 lineHeight = labelSize * 1.25f,

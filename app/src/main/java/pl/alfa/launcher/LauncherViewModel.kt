@@ -71,6 +71,23 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
     private val _picking = MutableStateFlow<Int?>(null)
     val picking: StateFlow<Int?> = _picking.asStateFlow()
 
+    private val _settings = MutableStateFlow(LauncherSettings.load(prefsFolders))
+    val settings: StateFlow<LauncherSettings> = _settings.asStateFlow()
+
+    fun updateSettings(change: (LauncherSettings) -> LauncherSettings) {
+        val updated = change(_settings.value)
+        _settings.value = updated
+        updated.save(prefsFolders)
+    }
+
+    private val _settingsOpen = MutableStateFlow(false)
+    val settingsOpen: StateFlow<Boolean> = _settingsOpen.asStateFlow()
+
+    fun setSettingsOpen(open: Boolean) {
+        _settingsOpen.value = open
+        if (open) setPanel(false)
+    }
+
     private val _homeTick = MutableStateFlow(0)
 
     /** Rośnie przy każdym naciśnięciu Home – ekran wraca wtedy do skrótów. */
@@ -81,6 +98,7 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         setPanel(false)
         hideActions()
         closeFolder()
+        _settingsOpen.value = false
     }
 
     private val _panelOpen = MutableStateFlow(false)
@@ -206,6 +224,10 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         folders.value = updated
         folderStore.save(updated)
     }
+
+    fun openHomeSettings() = repository.openHomeSettings()
+
+    fun isDefaultHome() = repository.isDefaultHome()
 
     fun openDialer() = repository.openDialer()
 

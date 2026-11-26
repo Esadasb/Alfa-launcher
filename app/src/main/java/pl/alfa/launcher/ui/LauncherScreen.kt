@@ -52,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -87,7 +88,12 @@ fun LauncherScreen(vm: LauncherViewModel = viewModel()) {
     var idle by remember { mutableStateOf(true) }
     var touchTick by remember { mutableIntStateOf(0) }
     val homeTick by vm.homeTick.collectAsStateWithLifecycle()
-    val busy = folder != null || panelOpen || actionTarget != null || picking != null
+    val settingsOpen by vm.settingsOpen.collectAsStateWithLifecycle()
+    val busy = folder != null || panelOpen || actionTarget != null || picking != null || settingsOpen
+
+    // Gdy Alfa nie jest ekranem głównym (otwarta z ikony w systemie) – pasek „Włącz”.
+    var isDefault by remember { mutableStateOf(true) }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { isDefault = vm.isDefaultHome() }
     LifecycleEventEffect(Lifecycle.Event.ON_START) { idle = true }
     LaunchedEffect(homeTick) { if (homeTick > 0) idle = true }
     LaunchedEffect(touchTick, selected, busy, idle) {
@@ -133,7 +139,7 @@ fun LauncherScreen(vm: LauncherViewModel = viewModel()) {
     Box(
         Modifier
             .fillMaxSize()
-            .background(Ink.Black)
+            .background(Ink.Page)
             .pointerInput(Unit) {
                 // Podgląda każdy dotyk (bez przechwytywania). Dotyk rolki pokazuje ikony liter,
                 // każdy inny dotyk przedłuża ich widoczność. Skróty da się normalnie klikać.
@@ -225,9 +231,30 @@ fun LauncherScreen(vm: LauncherViewModel = viewModel()) {
                 .padding(bottom = SwipeZoneHeight),
         )
 
+        // Na końcu rolki: ustawienia i wyłączenie.
+        RailEndButtons(
+            vm,
+            Modifier
+                .align(if (side > 0.5f) Alignment.BottomStart else Alignment.BottomEnd)
+                .windowInsetsPadding(WindowInsets.systemBars)
+                .padding(bottom = SwipeZoneHeight + 4.dp)
+                .graphicsLayer { alpha = 1f - 4f * side * (1f - side) },
+        )
+
+        if (!isDefault) {
+            MakeDefaultBanner(
+                vm,
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .windowInsetsPadding(WindowInsets.systemBars)
+                    .padding(start = 16.dp, end = 16.dp, bottom = SwipeZoneHeight + 8.dp),
+            )
+        }
+
         QuickPanel(vm)
         AppActionsSheet(vm)
         ShortcutPicker(vm)
+        SettingsScreen(vm)
     }
 }
 
@@ -241,7 +268,7 @@ private fun ShortcutsPage(shortcuts: List<pl.alfa.launcher.AppEntry>, vm: Launch
         Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.fillMaxWidth()) {
             BasicText(
                 "Skróty",
-                style = TextStyle(color = Ink.White, fontSize = 56.sp, fontWeight = FontWeight.Thin, lineHeight = 92.sp),
+                style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 56.sp, fontWeight = FontWeight.Thin, lineHeight = 92.sp),
             )
             Spacer(Modifier.weight(1f))
             if (shortcuts.size < LauncherViewModel.MAX_SHORTCUTS) {
@@ -258,7 +285,7 @@ private fun ShortcutsPage(shortcuts: List<pl.alfa.launcher.AppEntry>, vm: Launch
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 BasicText(
                     "Dotknij + w rogu, aby dodać pierwszy skrót",
-                    style = TextStyle(color = Ink.Dim, fontSize = 14.sp, textAlign = TextAlign.Center),
+                    style = TextStyle(shadow = Ink.TextShadow, color = Ink.Dim, fontSize = 14.sp, textAlign = TextAlign.Center),
                 )
             }
         } else {
@@ -294,11 +321,11 @@ private fun ClockHeader() {
     Column {
         BasicText(
             time,
-            style = TextStyle(color = Ink.White, fontSize = 64.sp, fontWeight = FontWeight.Thin, letterSpacing = (-1).sp),
+            style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 64.sp, fontWeight = FontWeight.Thin, letterSpacing = (-1).sp),
         )
         BasicText(
             date,
-            style = TextStyle(color = Ink.Dim, fontSize = 15.sp, fontWeight = FontWeight.Light, letterSpacing = 0.4.sp),
+            style = TextStyle(shadow = Ink.TextShadow, color = Ink.Dim, fontSize = 15.sp, fontWeight = FontWeight.Light, letterSpacing = 0.4.sp),
         )
     }
 }
@@ -309,12 +336,12 @@ private fun LetterPage(letter: Char, items: List<HomeItem>, vm: LauncherViewMode
         Row(verticalAlignment = Alignment.Bottom) {
             BasicText(
                 letter.toString(),
-                style = TextStyle(color = Ink.White, fontSize = 92.sp, fontWeight = FontWeight.Thin, lineHeight = 92.sp),
+                style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 92.sp, fontWeight = FontWeight.Thin, lineHeight = 92.sp),
             )
             Spacer(Modifier.width(14.dp))
             BasicText(
                 if (items.isEmpty()) "brak aplikacji" else appsCount(items.size),
-                style = TextStyle(color = Ink.Dim, fontSize = 13.sp, letterSpacing = 1.sp),
+                style = TextStyle(shadow = Ink.TextShadow, color = Ink.Dim, fontSize = 13.sp, letterSpacing = 1.sp),
                 modifier = Modifier.padding(bottom = 18.dp),
             )
         }
@@ -328,7 +355,7 @@ private fun LetterPage(letter: Char, items: List<HomeItem>, vm: LauncherViewMode
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 BasicText(
                     "Żadna aplikacja nie zaczyna się na „$letter”",
-                    style = TextStyle(color = Ink.Dim, fontSize = 14.sp, textAlign = TextAlign.Center),
+                    style = TextStyle(shadow = Ink.TextShadow, color = Ink.Dim, fontSize = 14.sp, textAlign = TextAlign.Center),
                 )
             }
         } else {

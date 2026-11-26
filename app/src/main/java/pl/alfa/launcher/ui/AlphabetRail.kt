@@ -105,8 +105,10 @@ fun AlphabetRail(
                 withTransform({ scale(zoom, zoom, Offset(x, y)) }) {
                     drawText(
                         textLayoutResult = layout,
+                        color = Ink.White,
                         topLeft = Offset(x - layout.size.width / 2f, y - layout.size.height / 2f),
                         alpha = alpha,
+                        shadow = Ink.TextShadow,
                     )
                 }
             }
@@ -138,6 +140,7 @@ fun AlphabetRail(
                     val layout = bubbleLayouts.getValue(sel)
                     drawText(
                         textLayoutResult = layout,
+                        color = Ink.White,
                         topLeft = Offset(center.x - layout.size.width / 2f, center.y - layout.size.height / 2f),
                         alpha = k,
                     )

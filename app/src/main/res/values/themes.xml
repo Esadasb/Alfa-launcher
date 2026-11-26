@@ -1,10 +1,12 @@
 <resources>
+    <!-- Tapeta systemowa jest zawsze pod spodem; przy tle w kolorze zasłania ją kolor okna. -->
     <style name="Theme.Alfa" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:colorBackground">@android:color/black</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowShowWallpaper">false</item>
+        <item name="android:windowShowWallpaper">true</item>
+        <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>

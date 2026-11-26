@@ -105,7 +105,7 @@ fun FolderTile(item: HomeItem.FolderItem, vm: LauncherViewModel, modifier: Modif
         Spacer(Modifier.height(8.dp))
         BasicText(
             item.folder.name,
-            style = TextStyle(color = Ink.White.copy(alpha = 0.88f), fontSize = 12.sp, lineHeight = 15.sp, textAlign = TextAlign.Center),
+            style = TextStyle(shadow = Ink.TextShadow, color = Ink.White.copy(alpha = 0.88f), fontSize = 12.sp, lineHeight = 15.sp, textAlign = TextAlign.Center),
             maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth(),
@@ -125,12 +125,12 @@ fun FolderPage(item: HomeItem.FolderItem, vm: LauncherViewModel, grid: LazyGridS
                     .clickable { vm.closeFolder() },
                 contentAlignment = Alignment.Center,
             ) {
-                BasicText("←", style = TextStyle(color = Ink.White, fontSize = 18.sp))
+                BasicText("←", style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 18.sp))
             }
             Spacer(Modifier.width(12.dp))
             Column {
-                BasicText(item.folder.name, style = TextStyle(color = Ink.White, fontSize = 44.sp, fontWeight = FontWeight.Thin, lineHeight = 46.sp))
-                BasicText(appsCount(item.apps.size), style = TextStyle(color = Ink.Dim, fontSize = 12.sp, letterSpacing = 1.sp))
+                BasicText(item.folder.name, style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 44.sp, fontWeight = FontWeight.Thin, lineHeight = 46.sp))
+                BasicText(appsCount(item.apps.size), style = TextStyle(shadow = Ink.TextShadow, color = Ink.Dim, fontSize = 12.sp, letterSpacing = 1.sp))
             }
         }
         Box(
@@ -205,7 +205,7 @@ fun AppActionsSheet(vm: LauncherViewModel) {
                 ) {
                     OutlineIcon(entry, vm, 36.dp)
                     Spacer(Modifier.width(10.dp))
-                    BasicText(entry.label, style = TextStyle(color = Ink.White, fontSize = 16.sp, fontWeight = FontWeight.Light))
+                    BasicText(entry.label, style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 16.sp, fontWeight = FontWeight.Light))
                 }
                 Box(Modifier.fillMaxWidth().height(1.dp).background(Ink.Faint))
 
@@ -229,13 +229,13 @@ fun AppActionsSheet(vm: LauncherViewModel) {
                             contentAlignment = Alignment.CenterStart,
                         ) {
                             if (newName.isEmpty()) {
-                                BasicText("Nowy folder, np. Banki", style = TextStyle(color = Ink.White.copy(alpha = 0.35f), fontSize = 14.sp))
+                                BasicText("Nowy folder, np. Banki", style = TextStyle(shadow = Ink.TextShadow, color = Ink.White.copy(alpha = 0.35f), fontSize = 14.sp))
                             }
                             BasicTextField(
                                 value = newName,
                                 onValueChange = { newName = it.take(30) },
                                 singleLine = true,
-                                textStyle = TextStyle(color = Ink.White, fontSize = 14.sp, fontWeight = FontWeight.Light),
+                                textStyle = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 14.sp, fontWeight = FontWeight.Light),
                                 cursorBrush = SolidColor(Ink.White),
                                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
                                 keyboardActions = KeyboardActions(onDone = {
@@ -253,7 +253,7 @@ fun AppActionsSheet(vm: LauncherViewModel) {
                                 .padding(horizontal = 14.dp),
                             contentAlignment = Alignment.Center,
                         ) {
-                            BasicText("Utwórz", style = TextStyle(color = Ink.White, fontSize = 13.sp))
+                            BasicText("Utwórz", style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 13.sp))
                         }
                     }
                 }
@@ -267,7 +267,7 @@ fun AppActionsSheet(vm: LauncherViewModel) {
 private fun ActionRow(label: String, onClick: () -> Unit) {
     BasicText(
         label,
-        style = TextStyle(color = Ink.White, fontSize = 14.sp, fontWeight = FontWeight.Light),
+        style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 14.sp, fontWeight = FontWeight.Light),
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)

@@ -17,6 +17,16 @@ object LineIcons {
         "M8.5 10.5h0.01M12 10.5h0.01M15.5 10.5h0.01",
     )
 
+    val Gear: ImageVector = line(
+        "M12 9a3 3 0 1 0 0 6a3 3 0 1 0 0-6z",
+        "M12 2.5v2.5M12 19v2.5M2.5 12h2.5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8",
+        "M12 5.5a6.5 6.5 0 1 0 0 13a6.5 6.5 0 1 0 0-13z",
+    )
+    val Power: ImageVector = line(
+        "M12 3v8",
+        "M7 6.3a7.5 7.5 0 1 0 10 0",
+    )
+
     private fun line(vararg paths: String): ImageVector {
         val builder = ImageVector.Builder(
             defaultWidth = 24.dp,
