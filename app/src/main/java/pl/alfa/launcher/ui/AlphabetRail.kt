@@ -64,10 +64,11 @@ fun AlphabetRail(
     val currentAvailable by rememberUpdatedState(available)
     val currentOnlyAvailable by rememberUpdatedState(onlyAvailable)
 
-    val letterStyle = TextStyle(color = Ink.White, fontSize = 13.sp, fontWeight = FontWeight.Medium)
-    val bubbleStyle = TextStyle(color = Ink.White, fontSize = 38.sp, fontWeight = FontWeight.Light)
-    val letterLayouts = remember(measurer) { letters.associateWith { measurer.measure(it.toString(), letterStyle) } }
-    val bubbleLayouts = remember(measurer) { letters.associateWith { measurer.measure(it.toString(), bubbleStyle) } }
+    val font = Ink.Typeface
+    val letterStyle = TextStyle(color = Ink.White, fontSize = if (Ink.Segment) 11.sp else 13.sp, fontWeight = FontWeight.Medium, fontFamily = font)
+    val bubbleStyle = TextStyle(color = Ink.White, fontSize = if (Ink.Segment) 30.sp else 38.sp, fontWeight = FontWeight.Light, fontFamily = font)
+    val letterLayouts = remember(measurer, font) { letters.associateWith { measurer.measure(it.toString(), letterStyle) } }
+    val bubbleLayouts = remember(measurer, font) { letters.associateWith { measurer.measure(it.toString(), bubbleStyle) } }
 
     Box(modifier) {
         Canvas(Modifier.fillMaxSize()) {

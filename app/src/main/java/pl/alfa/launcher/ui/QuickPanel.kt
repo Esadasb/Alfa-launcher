@@ -188,7 +188,7 @@ fun QuickPanel(vm: LauncherViewModel, modifier: Modifier = Modifier) {
                 }
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                BasicText("SKRÓTY", style = TextStyle(shadow = Ink.TextShadow, color = Ink.Dim, fontSize = 11.sp, letterSpacing = 2.sp))
+                BasicText("SKRÓTY", style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.Dim, fontSize = 11.sp, letterSpacing = 2.sp))
                 Spacer(Modifier.weight(1f))
                 if (shortcuts.size < LauncherViewModel.MAX_SHORTCUTS) {
                     AddButton { vm.openPicker(shortcuts.size) }
@@ -197,7 +197,7 @@ fun QuickPanel(vm: LauncherViewModel, modifier: Modifier = Modifier) {
             if (shortcuts.isEmpty()) {
                 BasicText(
                     "Dotknij +, aby dodać skrót. Przytrzymaj skrót, aby go zmienić.",
-                    style = TextStyle(shadow = Ink.TextShadow, color = Ink.White.copy(alpha = 0.35f), fontSize = 12.sp),
+                    style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.White.copy(alpha = 0.35f), fontSize = 12.sp),
                 )
             }
             shortcuts.chunked(4).forEachIndexed { row, items ->
@@ -242,7 +242,7 @@ private fun QuickAction(icon: ImageVector, label: String, modifier: Modifier, on
     ) {
         Image(rememberVectorPainter(icon), contentDescription = null, modifier = Modifier.size(28.dp), colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(Ink.White))
         Spacer(Modifier.width(10.dp))
-        BasicText(label, style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 14.sp))
+        BasicText(label, style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.White, fontSize = 14.sp))
     }
 }
 
@@ -362,12 +362,12 @@ private fun AppPicker(
                     .clickable(onClick = onClose),
                 contentAlignment = Alignment.Center,
             ) {
-                BasicText("←", style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 18.sp))
+                BasicText("←", style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.White, fontSize = 18.sp))
             }
             Spacer(Modifier.width(12.dp))
             Column {
-                BasicText(if (current == null) "Nowy skrót" else "Skrót ${slot + 1}", style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 24.sp, fontWeight = FontWeight.Light))
-                BasicText("Wybierz aplikację", style = TextStyle(shadow = Ink.TextShadow, color = Ink.Dim, fontSize = 12.sp))
+                BasicText(if (current == null) "Nowy skrót" else "Skrót ${slot + 1}", style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.White, fontSize = 24.sp, fontWeight = FontWeight.Light))
+                BasicText("Wybierz aplikację", style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.Dim, fontSize = 12.sp))
             }
         }
         Box(Modifier.fillMaxWidth().height(1.dp).background(Ink.Faint))
@@ -381,7 +381,7 @@ private fun AppPicker(
                     .clickable { onPick(null) },
                 contentAlignment = Alignment.Center,
             ) {
-                BasicText("Usuń skrót", style = TextStyle(shadow = Ink.TextShadow, color = Ink.White.copy(alpha = 0.8f), fontSize = 13.sp))
+                BasicText("Usuń skrót", style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.White.copy(alpha = 0.8f), fontSize = 13.sp))
             }
         }
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(vertical = 6.dp)) {
@@ -389,7 +389,7 @@ private fun AppPicker(
                 when (row) {
                     is PickerRow.Header -> BasicText(
                         row.letter.toString(),
-                        style = TextStyle(shadow = Ink.TextShadow, color = Ink.Dim, fontSize = 11.sp, letterSpacing = 2.sp),
+                        style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.Dim, fontSize = 11.sp, letterSpacing = 2.sp),
                         modifier = Modifier.padding(start = 20.dp, top = 14.dp, bottom = 4.dp),
                     )
                     is PickerRow.App -> Row(
@@ -403,13 +403,13 @@ private fun AppPicker(
                         Spacer(Modifier.width(14.dp))
                         BasicText(
                             row.entry.label,
-                            style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 16.sp, fontWeight = FontWeight.Light),
+                            style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.White, fontSize = 16.sp, fontWeight = FontWeight.Light),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.weight(1f),
                         )
                         if (current?.key == row.entry.key) {
-                            BasicText("obecny", style = TextStyle(shadow = Ink.TextShadow, color = Ink.Dim, fontSize = 11.sp, letterSpacing = 1.sp))
+                            BasicText("obecny", style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.Dim, fontSize = 11.sp, letterSpacing = 1.sp))
                         }
                     }
                 }

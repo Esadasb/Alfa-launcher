@@ -14,6 +14,8 @@ data class LauncherSettings(
     /** Przyciemnienie tapety 0..1. */
     val dim: Float = 0.3f,
     val shadows: Boolean = false,
+    /** Napisy jak na wyświetlaczu segmentowym zegara elektronicznego. */
+    val segment: Boolean = false,
 ) {
     val blurRadiusDp: Int get() = when (blur) { 0 -> 0; 1 -> 18; else -> 40 }
 
@@ -25,6 +27,7 @@ data class LauncherSettings(
             .putInt("blur", blur)
             .putFloat("dim", dim)
             .putBoolean("shadows", shadows)
+            .putBoolean("segment", segment)
             .apply()
     }
 
@@ -38,6 +41,7 @@ data class LauncherSettings(
                 blur = prefs.getInt("blur", d.blur),
                 dim = prefs.getFloat("dim", d.dim),
                 shadows = prefs.getBoolean("shadows", d.shadows),
+                segment = prefs.getBoolean("segment", d.segment),
             )
         }
     }

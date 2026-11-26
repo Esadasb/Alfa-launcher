@@ -6,7 +6,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import pl.alfa.launcher.R
 import pl.alfa.launcher.BackgroundMode
 import pl.alfa.launcher.LauncherSettings
 
@@ -19,6 +23,30 @@ object Ink {
     private var surfaceColor by mutableStateOf(Color.Black)
     private var pageColor by mutableStateOf(Color.Black)
     private var shadowsOn by mutableStateOf(false)
+    private var segmentOn by mutableStateOf(false)
+
+    /** Czcionka 14-segmentowa (litery) – cienka wersja dla dużych napisów, zwykła dla małych. */
+    val SegmentFamily = FontFamily(
+        Font(R.font.dseg14_light, FontWeight.Thin),
+        Font(R.font.dseg14_light, FontWeight.Light),
+        Font(R.font.dseg14_regular, FontWeight.Normal),
+        Font(R.font.dseg14_regular, FontWeight.Medium),
+    )
+
+    /** Czcionka 7-segmentowa (cyfry zegara). */
+    val ClockSegmentFamily = FontFamily(Font(R.font.dseg7_light, FontWeight.Thin), Font(R.font.dseg7_light, FontWeight.Normal))
+
+    /** Styl napisów: segmentowy jak w zegarach elektronicznych. */
+    val Segment: Boolean get() = segmentOn
+
+    /** Czcionka napisów (zwykła albo segmentowa). */
+    val Typeface: FontFamily get() = if (segmentOn) SegmentFamily else FontFamily.Default
+
+    /** Czcionka zegara. */
+    val ClockFont: FontFamily get() = if (segmentOn) ClockSegmentFamily else FontFamily.Default
+
+    /** Segmentowe litery są szersze – podpisy i tytuły są wtedy nieco mniejsze. */
+    val TextScale: Float get() = if (segmentOn) 0.74f else 1f
 
     /** Kolor liter, linii i konturów ikon. */
     val White: Color get() = fgColor
@@ -41,6 +69,7 @@ object Ink {
     fun apply(s: LauncherSettings, blurAvailable: Boolean) {
         fgColor = Color(s.foreground)
         shadowsOn = s.shadows
+        segmentOn = s.segment
         when (s.mode) {
             BackgroundMode.COLOR -> {
                 pageColor = Color(s.background)

@@ -143,9 +143,10 @@ fun AppTile(
             text = entry.label,
             style = TextStyle(
                 shadow = Ink.TextShadow,
+                fontFamily = Ink.Typeface,
                 color = Ink.White.copy(alpha = 0.88f),
-                fontSize = labelSize,
-                lineHeight = labelSize * 1.25f,
+                fontSize = labelSize * Ink.TextScale,
+                lineHeight = labelSize * Ink.TextScale * 1.3f,
                 letterSpacing = 0.2.sp,
                 textAlign = TextAlign.Center,
             ),

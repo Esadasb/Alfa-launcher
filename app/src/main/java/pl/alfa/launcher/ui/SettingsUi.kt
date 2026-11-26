@@ -183,6 +183,15 @@ fun SettingsScreen(vm: LauncherViewModel) {
             SectionLabel("Kolor liter i ikon")
             Swatches(ForegroundColors, s.foreground) { c -> vm.updateSettings { it.copy(foreground = c) } }
 
+            SectionLabel("Styl napisów")
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Choice("Klasyczny", !s.segment, Modifier.weight(1f)) { vm.updateSettings { it.copy(segment = false) } }
+                Choice("SEGMENTOWY", s.segment, Modifier.weight(1f), font = Ink.SegmentFamily) {
+                    vm.updateSettings { it.copy(segment = true) }
+                }
+            }
+            Note("Segmentowy: napisy jak na wyświetlaczu zegara elektronicznego. Polskie znaki są wtedy pokazywane zwykłą czcionką.")
+
             SectionLabel("Cienie pod ikonami i napisami")
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Choice("Włączone", s.shadows, Modifier.weight(1f)) { vm.updateSettings { it.copy(shadows = true) } }
@@ -208,7 +217,13 @@ private fun Note(text: String) {
 }
 
 @Composable
-private fun Choice(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun Choice(
+    label: String,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    font: androidx.compose.ui.text.font.FontFamily? = null,
+    onClick: () -> Unit,
+) {
     val shape = RoundedCornerShape(12.dp)
     Box(
         modifier
@@ -218,7 +233,7 @@ private fun Choice(label: String, selected: Boolean, modifier: Modifier = Modifi
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        BasicText(label, style = TextStyle(color = if (selected) Ink.White else Ink.Dim, fontSize = 14.sp))
+        BasicText(label, style = TextStyle(color = if (selected) Ink.White else Ink.Dim, fontSize = if (font != null) 12.sp else 14.sp, fontFamily = font))
     }
 }
 

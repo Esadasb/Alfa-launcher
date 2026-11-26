@@ -268,7 +268,7 @@ private fun ShortcutsPage(shortcuts: List<pl.alfa.launcher.AppEntry>, vm: Launch
         Row(verticalAlignment = Alignment.Bottom, modifier = Modifier.fillMaxWidth()) {
             BasicText(
                 "Skróty",
-                style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 56.sp, fontWeight = FontWeight.Thin, lineHeight = 92.sp),
+                style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.White, fontSize = 56.sp * Ink.TextScale, fontWeight = FontWeight.Thin, lineHeight = 92.sp),
             )
             Spacer(Modifier.weight(1f))
             if (shortcuts.size < LauncherViewModel.MAX_SHORTCUTS) {
@@ -285,7 +285,7 @@ private fun ShortcutsPage(shortcuts: List<pl.alfa.launcher.AppEntry>, vm: Launch
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 BasicText(
                     "Dotknij + w rogu, aby dodać pierwszy skrót",
-                    style = TextStyle(shadow = Ink.TextShadow, color = Ink.Dim, fontSize = 14.sp, textAlign = TextAlign.Center),
+                    style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.Dim, fontSize = 14.sp, textAlign = TextAlign.Center),
                 )
             }
         } else {
@@ -319,13 +319,29 @@ private fun ClockHeader() {
     val date = remember(minute) { dateFormat.format(Date(now)) }
 
     Column {
-        BasicText(
-            time,
-            style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 64.sp, fontWeight = FontWeight.Thin, letterSpacing = (-1).sp),
-        )
+        if (Ink.Segment) {
+            // Wyświetlacz segmentowy: wygaszone segmenty „88:88” pod spodem, jak w prawdziwym zegarze.
+            val clockStyle = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.ClockFont, color = Ink.White, fontSize = 52.sp, fontWeight = FontWeight.Thin)
+            Box(Modifier.padding(vertical = 8.dp)) {
+                BasicText(time.map { if (it.isDigit()) '8' else it }.joinToString(""), style = clockStyle.copy(color = Ink.White.copy(alpha = 0.08f), shadow = null))
+                BasicText(time, style = clockStyle)
+            }
+        } else {
+            BasicText(
+                time,
+                style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.White, fontSize = 64.sp, fontWeight = FontWeight.Thin, letterSpacing = (-1).sp),
+            )
+        }
         BasicText(
             date,
-            style = TextStyle(shadow = Ink.TextShadow, color = Ink.Dim, fontSize = 15.sp, fontWeight = FontWeight.Light, letterSpacing = 0.4.sp),
+            style = TextStyle(
+                shadow = Ink.TextShadow,
+                fontFamily = Ink.Typeface,
+                color = Ink.Dim,
+                fontSize = 15.sp * Ink.TextScale,
+                fontWeight = FontWeight.Light,
+                letterSpacing = 0.4.sp,
+            ),
         )
     }
 }
@@ -336,12 +352,12 @@ private fun LetterPage(letter: Char, items: List<HomeItem>, vm: LauncherViewMode
         Row(verticalAlignment = Alignment.Bottom) {
             BasicText(
                 letter.toString(),
-                style = TextStyle(shadow = Ink.TextShadow, color = Ink.White, fontSize = 92.sp, fontWeight = FontWeight.Thin, lineHeight = 92.sp),
+                style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.White, fontSize = 92.sp, fontWeight = FontWeight.Thin, lineHeight = 92.sp),
             )
             Spacer(Modifier.width(14.dp))
             BasicText(
                 if (items.isEmpty()) "brak aplikacji" else appsCount(items.size),
-                style = TextStyle(shadow = Ink.TextShadow, color = Ink.Dim, fontSize = 13.sp, letterSpacing = 1.sp),
+                style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.Dim, fontSize = 13.sp, letterSpacing = 1.sp),
                 modifier = Modifier.padding(bottom = 18.dp),
             )
         }
@@ -355,7 +371,7 @@ private fun LetterPage(letter: Char, items: List<HomeItem>, vm: LauncherViewMode
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 BasicText(
                     "Żadna aplikacja nie zaczyna się na „$letter”",
-                    style = TextStyle(shadow = Ink.TextShadow, color = Ink.Dim, fontSize = 14.sp, textAlign = TextAlign.Center),
+                    style = TextStyle(shadow = Ink.TextShadow, fontFamily = Ink.Typeface, color = Ink.Dim, fontSize = 14.sp, textAlign = TextAlign.Center),
                 )
             }
         } else {
