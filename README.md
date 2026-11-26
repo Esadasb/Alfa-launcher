@@ -17,7 +17,7 @@ Czarno-biały ekran główny dla Androida 8.0+ (Kotlin + Jetpack Compose).
 ### Sposób 1: GitHub (bez instalowania czegokolwiek)
 1. Załóż nowe repozytorium na github.com i wrzuć do niego całą zawartość tego folderu (np. przyciskiem *Add file → Upload files*, razem z ukrytym folderem `.github`).
 2. Wejdź w zakładkę **Actions**. Workflow „Zbuduj APK” uruchomi się sam (lub kliknij *Run workflow*).
-3. Po ok. 5 minutach pobierz artefakt **AlfaLauncher-apk** – w środku jest `app-release.apk`.
+3. Po ok. 5 minutach w zakładce **Releases** pojawi się nowa wersja z plikiem `Alfa-launcher.apk`. Najnowsza wersja jest zawsze pod adresem `https://github.com/Esadasb/Alfa-launcher/releases/latest/download/Alfa-launcher.apk`.
 
 ### Sposób 2: Android Studio
 1. Zainstaluj Android Studio (Ladybug lub nowsze) i otwórz ten folder (*File → Open*).
