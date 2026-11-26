@@ -13,7 +13,7 @@ Czarno-biały ekran główny dla Androida 8.0+ (Kotlin + Jetpack Compose).
 - Dotknięcie ikony otwiera aplikację z animacją.
 - **Na końcu rolki** są dwie ikony: koło zębate otwiera **ustawienia launchera**, a przycisk zasilania **wyłącza Alfę**, czyli otwiera systemowy wybór ekranu głównego, gdzie wracasz do launchera telefonu. Alfa zostaje w szufladzie aplikacji telefonu: otwarcie jej stamtąd pokaże pasek *Włącz Alfa jako ekran główny*.
 - **Ustawienia:** tło w kolorze (6 kolorów, także jasne) albo **tapeta telefonu** z rozmyciem (brak / lekkie / mocne, od Androida 12) i przyciemnieniem, kolor liter i ikon (6 kolorów) oraz **cienie** pod ikonami i napisami, które przy tapecie włączają się same. Do wyboru jest też **styl napisów segmentowy**, jak na wyświetlaczu zegara elektronicznego (czcionki DSEG, licencja SIL OFL – plik `FONT-LICENSE-DSEG.txt`).
-- **Ekran blokady w stylu Alfa:** w ustawieniach Alfa może ustawić tapetę ekranu blokady w swoich kolorach i stylu napisów (rolka alfabetu i duża litera „A”). Tapeta odświeża się po każdej zmianie wyglądu, a opcja „Systemowy” przywraca poprzednią. Android nie pozwala aplikacjom zastąpić samego ekranu blokady, więc zegar i powiadomienia nadal rysuje system.
+- **Ekran blokady w stylu Alfa:** w ustawieniach Alfa może ustawić tapetę ekranu blokady w swoich kolorach i stylu napisów (duża litera „A” i alfabet z efektem lupy w dolnej części ekranu, z dala od systemowego zegara). Tapeta odświeża się po każdej zmianie wyglądu, a opcja „Systemowy” przywraca poprzednią. Android nie pozwala aplikacjom zastąpić samego ekranu blokady, więc zegar i powiadomienia nadal rysuje system.
 - Zainstalowane i usunięte aplikacje pojawiają się i znikają automatycznie. Obsługiwany jest też profil służbowy.
 
 ## Zbudowanie APK

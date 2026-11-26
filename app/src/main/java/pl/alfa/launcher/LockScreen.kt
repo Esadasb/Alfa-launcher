@@ -63,55 +63,51 @@ object LockScreen {
             Typeface.create("sans-serif-thin", Typeface.NORMAL)
         }
 
-        // Rolka alfabetu po prawej, w dolnych dwóch trzecich ekranu.
-        val letters = ALPHABET
-        val top = h * 0.30f
-        val bottom = h - 72 * d
-        val step = (bottom - top) / (letters.size - 1)
-        val railX = w - 26 * d
-        val focus = 0f // fala wokół litery „A”
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = face
-            textAlign = Paint.Align.CENTER
-        }
-        val baseSize = (if (s.segment) 11f else 13f) * d
-        letters.forEachIndexed { i, ch ->
-            val dist = i - focus
-            val wave = exp(-(dist * dist) / (2 * 1.5f * 1.5f))
-            val zoom = 1f + 1.3f * wave
-            val y = top + i * step + dist * 0.9f * wave * step * 0.5f
-            val x = railX - 30 * d * wave
-            paint.textSize = baseSize * zoom
-            paint.color = ColorUtils.setAlphaComponent(fg, (255 * (0.45f + 0.55f * wave)).toInt())
-            val fm = paint.fontMetrics
-            c.drawText(ch.toString(), x, y - (fm.ascent + fm.descent) / 2, paint)
-        }
+        // Cała grafika jest w dolnej części ekranu (poniżej ~60% wysokości): wyżej system
+        // rysuje zegar, datę i powiadomienia, a ich położenie zależy od producenta.
+        // Nad samym dołem zostaje 150 dp na skróty aparatu i latarki.
+        val left = 28 * d
+        val right = w - 28 * d
+        val rowY = h - 150 * d
 
-        // Duża cienka litera „A” – znak Alfa, w miejscu dymka przy rolce.
+        // Duża cienka litera „A” – znak Alfa.
         val big = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = thin
             textAlign = Paint.Align.LEFT
-            textSize = (if (s.segment) 120f else 160f) * d
+            textSize = (if (s.segment) 84f else 112f) * d
             color = ColorUtils.setAlphaComponent(fg, 235)
         }
-        val bigY = top + 96 * d
-        val bigX = 28 * d
-        c.drawText("A", bigX, bigY + (if (s.segment) 30 else 40) * d, big)
+        val bigY = rowY - 64 * d
+        c.drawText("A", left - (if (s.segment) 0f else 6 * d), bigY, big)
 
-        // Cienka linia i podpis jak nagłówek strony litery.
+        // Cienka linia jak pod nagłówkiem strony litery.
         val line = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = ColorUtils.setAlphaComponent(fg, 46)
             strokeWidth = d
         }
-        val lineY = bigY + 64 * d
-        c.drawLine(bigX, lineY, railX - 64 * d, lineY, line)
-        val label = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        val lineY = bigY + 20 * d
+        c.drawLine(left, lineY, right, lineY, line)
+
+        // Alfabet w poziomie z efektem lupy na „A” – rolka launchera obrócona na bok.
+        val letters = ALPHABET
+        val step = (right - left) / (letters.size - 1)
+        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = face
-            textSize = (if (s.segment) 10f else 12f) * d
-            color = ColorUtils.setAlphaComponent(fg, 140)
-            letterSpacing = 0.2f
+            textAlign = Paint.Align.CENTER
         }
-        c.drawText("ALFA", bigX + 4 * d, lineY + 22 * d, label)
+        val baseSize = (if (s.segment) 8f else 10f) * d
+        val focus = 0f
+        letters.forEachIndexed { i, ch ->
+            val dist = i - focus
+            val wave = exp(-(dist * dist) / (2 * 1.5f * 1.5f))
+            val zoom = 1f + 1.3f * wave
+            val x = left + i * step + dist * 0.9f * wave * step * 0.6f
+            val y = rowY - 10 * d * wave
+            paint.textSize = baseSize * zoom
+            paint.color = ColorUtils.setAlphaComponent(fg, (255 * (0.4f + 0.6f * wave)).toInt())
+            val fm = paint.fontMetrics
+            c.drawText(ch.toString(), x, y - (fm.ascent + fm.descent) / 2, paint)
+        }
         return bmp
     }
 
