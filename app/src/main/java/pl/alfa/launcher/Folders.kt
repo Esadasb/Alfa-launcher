@@ -1,6 +1,7 @@
 package pl.alfa.launcher
 
 import android.content.SharedPreferences
+import android.content.pm.ApplicationInfo
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.UUID
@@ -48,4 +49,30 @@ class FolderStore(private val prefs: SharedPreferences) {
     private companion object {
         const val KEY = "folders"
     }
+}
+
+/** Fragmenty nazw pakietów popularnych aplikacji bankowych i płatniczych. */
+private val BANK_PACKAGES = listOf(
+    "pl.pkobp", "pl.mbank", "pl.ing.", "pl.bzwbk", "pl.santander", "pekao", "millennium",
+    "pl.aliorbank", "alior", "com.finanteq", "creditagricole", "com.revolut", "com.paypal",
+    "nestbank", "velobank", "getinbank", "citihandlowy", "com.citi", "bosbank", "bnpparibas",
+    "com.wise", "com.transferwise", "blik", "toyotabank", "com.n26", "com.bunq", "plusbank",
+)
+
+fun isBankApp(entry: AppEntry): Boolean {
+    val pkg = entry.info.applicationInfo.packageName.lowercase()
+    val label = entry.label.lowercase()
+    return BANK_PACKAGES.any { it in pkg } || "bank" in pkg || "bank" in label
+}
+
+fun isGame(entry: AppEntry): Boolean =
+    entry.info.applicationInfo.category == ApplicationInfo.CATEGORY_GAME ||
+        (entry.info.applicationInfo.flags and ApplicationInfo.FLAG_IS_GAME) != 0
+
+/** Foldery tworzone samodzielnie przy pierwszym uruchomieniu: „Banki” i „Gry”. */
+fun suggestedFolders(apps: List<AppEntry>, newId: () -> String): List<Folder> = buildList {
+    val banks = apps.filter(::isBankApp)
+    if (banks.isNotEmpty()) add(Folder(newId(), "Banki", banks.map { it.key }))
+    val games = apps.filter { isGame(it) && !isBankApp(it) }
+    if (games.size >= 2) add(Folder(newId(), "Gry", games.map { it.key }))
 }

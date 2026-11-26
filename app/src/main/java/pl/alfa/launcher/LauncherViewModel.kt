@@ -82,6 +82,7 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         loadJob = viewModelScope.launch {
             val list = withContext(Dispatchers.IO) { repository.loadApps() }
             apps.value = list
+            createSuggestedFoldersOnce(list)
             if (_selected.value == null) _selected.value = list.firstOrNull()?.letter
             // Przygotuj wszystkie kontury z wyprzedzeniem – rolka przełącza litery natychmiast.
             withContext(Dispatchers.Default) {
@@ -150,6 +151,15 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
         list.map { it.copy(appKeys = it.appKeys - entry.key) }
     }
 
+    /** Przy pierwszym uruchomieniu sam układa aplikacje bankowe i gry w foldery. */
+    private fun createSuggestedFoldersOnce(list: List<AppEntry>) {
+        if (prefsFolders.getBoolean(AUTO_FOLDERS_DONE, false) || list.isEmpty()) return
+        prefsFolders.edit().putBoolean(AUTO_FOLDERS_DONE, true).apply()
+        if (folders.value.isNotEmpty()) return
+        val suggested = suggestedFolders(list, folderStore::newId)
+        if (suggested.isNotEmpty()) editFolders { suggested }
+    }
+
     private fun editFolders(change: (List<Folder>) -> List<Folder>) {
         // Puste foldery znikają same.
         val updated = change(folders.value).filter { it.appKeys.isNotEmpty() }
@@ -169,5 +179,6 @@ class LauncherViewModel(app: Application) : AndroidViewModel(app) {
 
     companion object {
         const val SHORTCUT_SLOTS = 8
+        private const val AUTO_FOLDERS_DONE = "auto_folders_v1"
     }
 }
